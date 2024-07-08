@@ -82,7 +82,8 @@ def output_dryad_to_files(dataset):
         # go through every file in response
         for file_info in json_response['_embedded']['stash:files']:
             if file_info['status'] != 'deleted' and file_info['path'].endswith(SUFFIXES) and \
-                    file_info['_links'].get('stash:download') is not None:
+                    file_info['_links'].get('stash:download') is not None and \
+                    0 < file_info['size'] < 5.0e+8:  # 500 MB
                 download_url = f"{BASE_URL}{file_info['_links']['stash:download']['href']}"
                 print(f"  Downloading {file_info['path']}, {file_info['size']} bytes")
                 download_file(download_url, f"output/{fn_doi}/{file_info['path']}")
