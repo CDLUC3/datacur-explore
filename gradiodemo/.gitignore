@@ -3,3 +3,4 @@ secret.py
 *.csv
 flagged/
 secrets.py
+local_secrets.py

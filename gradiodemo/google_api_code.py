@@ -3,7 +3,7 @@ import vertexai
 from vertexai.generative_models import GenerativeModel, Part, FinishReason
 import vertexai.preview.generative_models as generative_models
 import pdb
-import secrets
+import local_secrets
 
 
 def generate(from_file):
@@ -12,7 +12,7 @@ def generate(from_file):
 
     document1 = Part.from_data(mime_type="text/csv", data=file_content)
 
-    vertexai.init(project=secrets.PROJECT, location=secrets.LOCATION)
+    vertexai.init(project=local_secrets.PROJECT, location=local_secrets.LOCATION)
 
     generation_config = {"max_output_tokens": 8192, "temperature": 0.5, "top_p": 0.95}
 
