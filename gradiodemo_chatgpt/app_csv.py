@@ -3,6 +3,7 @@ import pandas as pd
 import markdown
 import pdb
 import open_api_code
+import local_secrets
 
 # looking at https://www.cloudskillsboost.google/course_templates/552?utm_campaign=FY24-Q2-global-website-skillsboost&utm_content=developers&utm_medium=et&utm_source=cgc-site&utm_term=-
 # vertex ai studio
@@ -15,7 +16,7 @@ import open_api_code
 def process_file_and_return_markdown(file, system_info, prompt):
     # Read the file
     # df = pd.read_csv(file.name)
-    response = open_api_code.generate(file.name, system_info, prompt)
+    response = open_api_code.generate(file.name, system_info, prompt, local_secrets.OPENAI_API_KEY)
 
     # Process the file (this would depend on your specific cloud service)
     # For the sake of this example, let's just convert the DataFrame to Markdown

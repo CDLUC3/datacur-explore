@@ -1,7 +1,6 @@
 import base64
 import openai
 import pdb
-import local_secrets
 import pandas as pd
 import codecs
 from striprtf.striprtf import rtf_to_text
@@ -33,7 +32,7 @@ def read_first_of_file(file_path):
         return content.decode('iso-8859-1')
 
 
-def generate(from_file, system_info, prompt):
+def generate(from_file, system_info, prompt, api_key):
     if from_file.endswith('.xlsx') or from_file.endswith('.xls'):
         df = pd.read_excel(from_file)
         csv_content = df.to_string()[0:10000]
@@ -45,7 +44,7 @@ def generate(from_file, system_info, prompt):
     else:
         csv_content = read_first_of_file(from_file)[0:10000]
 
-    client = openai.OpenAI(api_key=local_secrets.OPENAI_API_KEY)
+    client = openai.OpenAI(api_key=api_key)
 
     response = client.chat.completions.create(
         model="gpt-4o",
