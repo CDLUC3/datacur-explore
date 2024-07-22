@@ -27,9 +27,11 @@ def process_file_and_return_markdown(file, system_info, prompt):
 # Create the Gradio interface
 # iface = gr.Interface(fn=process_file_and_return_markdown, inputs="file", outputs="markdown")
 
-default_system_info = ("You are a system helping a researcher analyze a file containing research data in tabular format. "
+default_system_info =\
+    ("You are a system helping a researcher analyze a file containing research data in tabular format. "
      "The objective is to give advice to improve the data quality for reuse and reproducibility by other researchers "
-     "in the same field. Besides general practices, specific advice for improving the given file is most useful.")
+     "in the same field. Besides general practices, specific advice for improving the given file is most useful. "
+     "Notify the user if the file does not appear to be tabular data.")
 
 default_user_prompt = (
     'The file contains research data in tabular format. Analyze it for data '
@@ -41,7 +43,8 @@ iface = gr.Interface(
     fn=process_file_and_return_markdown,
     inputs=["file", gr.TextArea(label="System conditioning", value=default_system_info),
             gr.TextArea(label="User prompt", value=default_user_prompt)],
-    outputs="markdown"
+    outputs="markdown",
+    title="Basic data quality analysis with ChatGPT"
 )
 
 iface.launch(debug=True)
