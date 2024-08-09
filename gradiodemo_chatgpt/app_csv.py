@@ -9,11 +9,9 @@ import argparse
 # looking at https://www.cloudskillsboost.google/course_templates/552?utm_campaign=FY24-Q2-global-website-skillsboost&utm_content=developers&utm_medium=et&utm_source=cgc-site&utm_term=-
 # vertex ai studio
 
-# vertex ai just has you use the tools in the console to authenticate
-
-# pip install --upgrade google-cloud-aiplatform
-# gcloud auth application-default login
-
+# https://medium.com/@nimritakoul01/getting-started-with-gradio-python-library-49e59e363c66 seems a good intro to gradio
+# https://gradio.app/docs#quickstart
+# https://gradio.app/docs#gr.Interface
 
 def process_file_and_return_markdown(file, system_info, prompt):
     # Read the file
@@ -62,5 +60,11 @@ def main():
         title="Basic data quality analysis with ChatGPT"
     )
 
-    iface.launch(debug=args.debug, share=args.share, username=args.user, password=args.password, host=args.listen,
-                 port=args.port)
+    auth = None
+    if args.user and args.password:
+        auth = (args.user, args.password)
+    iface.launch(debug=args.debug, share=args.share, auth=auth, server_name=args.listen, server_port=args.port)
+
+
+if __name__ == "__main__":
+    main()
