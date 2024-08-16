@@ -1,0 +1,7 @@
+secret.py
+.idea/
+*.csv
+flagged/
+secrets.py
+local_secrets.py
+config.py

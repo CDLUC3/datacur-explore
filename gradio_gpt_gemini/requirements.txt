@@ -1,0 +1,9 @@
+openai
+ipdb
+gradio
+pandas
+markdown
+striprtf
+openpyxl
+vertexai
+striprtf
