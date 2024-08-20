@@ -5,6 +5,8 @@ if os.getenv('COLAB_RELEASE_TAG'):
 else:
     IN_COLAB = False
 
+KEYS = ['openai_api_key', 'google_project', 'google_location', 'google_api_key']
+
 if not IN_COLAB:
     with open("config.yaml", 'r') as stream:
         try:
@@ -14,8 +16,7 @@ if not IN_COLAB:
 else:
     config = {}
     import google.colab.userdata as userdata
-    attributes = dir(userdata)
-    for item in userdata:
+    for item in KEYS:
         config[item] = userdata.get(item)
 
 
