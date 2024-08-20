@@ -16,7 +16,7 @@ def generate(from_file, system_info, prompt):
 
     document1 = Part.from_data(mime_type="text/csv", data=file_content.encode('utf-8'))
 
-    vertexai.init(project=config.GOOG_PROJECT, location=config.GOOG_LOCATION)
+    vertexai.init(project=config.get('google_project'), location=config.get('google_location'))
 
     generation_config = {"max_output_tokens": 8192, "temperature": 0.5, "top_p": 0.95}
 

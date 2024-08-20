@@ -7,3 +7,5 @@ striprtf
 openpyxl
 vertexai
 striprtf
+google
+pyyaml

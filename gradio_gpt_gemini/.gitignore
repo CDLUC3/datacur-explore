@@ -4,4 +4,4 @@ secret.py
 flagged/
 secrets.py
 local_secrets.py
-config.py
+config.yaml
