@@ -9,4 +9,3 @@ vertexai
 striprtf
 google
 pyyaml
-google-api-python-client
