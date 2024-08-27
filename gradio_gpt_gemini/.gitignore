@@ -5,3 +5,4 @@ flagged/
 secrets.py
 local_secrets.py
 config.yaml
+prompt_profiles/
