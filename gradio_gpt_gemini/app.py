@@ -31,7 +31,11 @@ def load_profile(profile_name):
         print(f"Error loading profile {profile_name}: {e}")
         return "", ""
 
-def save_profile(profile_name, system_info, user_prompt):
+def save_profile_action(profile_name, system_info, user_prompt):
+    if profile_name is None:
+        return "Profile name is required"
+    if profile_name.endswith('.json'):
+        profile_name = profile_name[:-5]
     try:
         profile = {
             "system_info": system_info,
@@ -39,6 +43,7 @@ def save_profile(profile_name, system_info, user_prompt):
         }
         with open(f"prompt_profiles/{profile_name}.json", 'w') as f:
             json.dump(profile, f)
+        return f"Profile {profile_name} saved."
     except Exception as e:
         print(f"Error saving profile {profile_name}: {e}")
 
@@ -93,23 +98,37 @@ def main():
     profiles = list_profiles()
 
     # Create the Gradio interface with additional text inputs
-    with gr.Blocks(css=".small-button { width: 80px !important; }") as iface:
+    with gr.Blocks() as iface:
         gr.Markdown("# Basic data quality analysis with LLM")
         file_input = gr.File(label="Upload file")
         system_info_input = gr.TextArea(label="System conditioning", value=default_system_info)
         user_prompt_input = gr.TextArea(label="User prompt", value=default_user_prompt)
         option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
         with gr.Row():
-            profile_input = gr.Dropdown(label="Profile name", choices=profiles, value=profiles[0] if profiles else None,
+            with gr.Column(scale=8):
+                profile_input = gr.Dropdown(label="Profile name", choices=profiles, value=profiles[0] if profiles else None,
                                         interactive=True)
-            reload_button = gr.Button("🔄", elem_classes="small-button")
-        save_profile_input = gr.Checkbox(label="Save profile")
+            with gr.Column(scale=2):
+                reload_button = gr.Button("🔄", elem_classes="small-button")
+
+        with gr.Row():
+            with gr.Column(scale=8):
+                save_profile_name_input = gr.Textbox(label="Profile name to save")
+            with gr.Column(scale=2):
+                save_button = gr.Button("Save Profile")
+
+        submit_button = gr.Button("Submit to LLM")
+
         output = gr.Markdown()
 
-        file_input.change(fn=process_file_and_return_markdown,
-                          inputs=[file_input, system_info_input, user_prompt_input, option_input], outputs=output)
         profile_input.change(fn=update_textareas, inputs=profile_input, outputs=[system_info_input, user_prompt_input])
         reload_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
+        save_button.click(fn=save_profile_action,
+                          inputs=[save_profile_name_input, system_info_input, user_prompt_input],
+                          outputs=output)
+        submit_button.click(fn=process_file_and_return_markdown,
+                            inputs=[file_input, system_info_input, user_prompt_input, option_input],
+                            outputs=output)
 
     auth = None
     if args.user and args.password:
