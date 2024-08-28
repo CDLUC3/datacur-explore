@@ -6,6 +6,7 @@ import open_api_code
 import google_api_code
 import argparse
 import os
+import json
 
 # looking at https://www.cloudskillsboost.google/course_templates/552?utm_campaign=FY24-Q2-global-website-skillsboost&utm_content=developers&utm_medium=et&utm_source=cgc-site&utm_term=-
 # vertex ai studio
@@ -13,6 +14,33 @@ import os
 # https://medium.com/@nimritakoul01/getting-started-with-gradio-python-library-49e59e363c66 seems a good intro to gradio
 # https://gradio.app/docs#quickstart
 # https://gradio.app/docs#gr.Interface
+
+def list_profiles():
+    try:
+        return [f.split('.')[0] for f in os.listdir('prompt_profiles') if f.endswith('.json')]
+    except Exception as e:
+        print(f"Error listing profiles: {e}")
+        return []
+
+def load_profile(profile_name):
+    try:
+        with open(f"prompt_profiles/{profile_name}.json", 'r') as f:
+            profile = json.load(f)
+        return profile['system_info'], profile['user_prompt']
+    except Exception as e:
+        print(f"Error loading profile {profile_name}: {e}")
+        return "", ""
+
+def save_profile(profile_name, system_info, user_prompt):
+    try:
+        profile = {
+            "system_info": system_info,
+            "user_prompt": user_prompt
+        }
+        with open(f"prompt_profiles/{profile_name}.json", 'w') as f:
+            json.dump(profile, f)
+    except Exception as e:
+        print(f"Error saving profile {profile_name}: {e}")
 
 
 def process_file_and_return_markdown(file, system_info, prompt, option):
@@ -28,6 +56,12 @@ def process_file_and_return_markdown(file, system_info, prompt, option):
         response = f"# Analyzed by Gemini-1.5-flash-001:\n\nFile name: {f_name}\n\n" + response
     return response
 
+def update_textareas(profile_name):
+    system_info, user_prompt = load_profile(profile_name)
+    return system_info, user_prompt
+
+def reload_profiles():
+    return gr.update(choices=list_profiles())
 
 def main():
     parser = argparse.ArgumentParser(description="Run the Gradio app with specified options.")
@@ -56,18 +90,26 @@ def main():
         'improved for reuse and reproducibility?')
 
     options = ["GPT-4o", "Gemini-1.5-flash-001"]
+    profiles = list_profiles()
 
     # Create the Gradio interface with additional text inputs
-    iface = gr.Interface(
-        fn=process_file_and_return_markdown,
-        inputs=["file",
-                gr.TextArea(label="System conditioning", value=default_system_info),
-                gr.TextArea(label="User prompt", value=default_user_prompt),
-                gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
-                ],
-        outputs="markdown",
-        title="Basic data quality analysis with LLM"
-    )
+    with gr.Blocks(css=".small-button { width: 80px !important; }") as iface:
+        gr.Markdown("# Basic data quality analysis with LLM")
+        file_input = gr.File(label="Upload file")
+        system_info_input = gr.TextArea(label="System conditioning", value=default_system_info)
+        user_prompt_input = gr.TextArea(label="User prompt", value=default_user_prompt)
+        option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
+        with gr.Row():
+            profile_input = gr.Dropdown(label="Profile name", choices=profiles, value=profiles[0] if profiles else None,
+                                        interactive=True)
+            reload_button = gr.Button("🔄", elem_classes="small-button")
+        save_profile_input = gr.Checkbox(label="Save profile")
+        output = gr.Markdown()
+
+        file_input.change(fn=process_file_and_return_markdown,
+                          inputs=[file_input, system_info_input, user_prompt_input, option_input], outputs=output)
+        profile_input.change(fn=update_textareas, inputs=profile_input, outputs=[system_info_input, user_prompt_input])
+        reload_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
 
     auth = None
     if args.user and args.password:
