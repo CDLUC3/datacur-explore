@@ -99,27 +99,29 @@ def main():
 
     # Create the Gradio interface with additional text inputs
     with gr.Blocks() as iface:
-        gr.Markdown("# Basic data quality analysis with LLM")
-        file_input = gr.File(label="Upload file")
-        system_info_input = gr.TextArea(label="System conditioning", value=default_system_info)
-        user_prompt_input = gr.TextArea(label="User prompt", value=default_user_prompt)
-        option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
         with gr.Row():
-            with gr.Column(scale=8):
-                profile_input = gr.Dropdown(label="Profile name", choices=profiles, value=profiles[0] if profiles else None,
-                                        interactive=True)
-            with gr.Column(scale=2):
-                reload_button = gr.Button("🔄", elem_classes="small-button")
+            with gr.Column(scale=1):
+                gr.Markdown("# Basic data quality analysis with LLMs")
+                file_input = gr.File(label="Upload file")
+                system_info_input = gr.TextArea(label="System conditioning", value=default_system_info)
+                user_prompt_input = gr.TextArea(label="User prompt", value=default_user_prompt)
+                option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
+                with gr.Row():
+                    with gr.Column(scale=8):
+                        profile_input = gr.Dropdown(label="Profile name", choices=profiles, value=profiles[0] if profiles else None,
+                                                interactive=True)
+                    with gr.Column(scale=2):
+                        reload_button = gr.Button("🔄", elem_classes="small-button")
 
-        with gr.Row():
-            with gr.Column(scale=8):
-                save_profile_name_input = gr.Textbox(label="Profile name to save")
-            with gr.Column(scale=2):
-                save_button = gr.Button("Save Profile")
+                with gr.Row():
+                    with gr.Column(scale=8):
+                        save_profile_name_input = gr.Textbox(label="Profile name to save")
+                    with gr.Column(scale=2):
+                        save_button = gr.Button("Save Profile")
 
-        submit_button = gr.Button("Submit to LLM")
-
-        output = gr.Markdown()
+                submit_button = gr.Button("Submit to LLM")
+            with gr.Column(scale=1):
+                output = gr.Markdown()
 
         profile_input.change(fn=update_textareas, inputs=profile_input, outputs=[system_info_input, user_prompt_input])
         reload_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
