@@ -19,7 +19,7 @@ def generate(from_file, system_info, prompt):
             {"role": "system", "content": system_info},
             {"role": "user", "content": prompt + '\n\n' + csv_content}
         ],
-        max_tokens=2048  # Adjust the max tokens based on your needs
+        max_tokens=8192  # Adjust the max tokens based on your needs
     )
 
     return response.choices[0].message.content
