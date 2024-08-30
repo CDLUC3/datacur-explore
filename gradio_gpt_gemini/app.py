@@ -17,10 +17,11 @@ import json
 
 def list_profiles():
     try:
-        return [f.split('.')[0] for f in os.listdir('prompt_profiles') if f.endswith('.json')]
+        profiles = [f.split('.')[0] for f in os.listdir('prompt_profiles') if f.endswith('.json')]
+        return ["[Select profile]"] + profiles
     except Exception as e:
         print(f"Error listing profiles: {e}")
-        return []
+        return ["[Select profile]"]
 
 def load_profile(profile_name):
     try:
@@ -30,6 +31,14 @@ def load_profile(profile_name):
     except Exception as e:
         print(f"Error loading profile {profile_name}: {e}")
         return "", ""
+
+def delete_profile(profile_name):
+    try:
+        os.remove(f"prompt_profiles/{profile_name}.json")
+        return f"Profile {profile_name} deleted.", list_profiles()
+    except Exception as e:
+        print(f"Error deleting profile {profile_name}: {e}")
+        return f"Error deleting profile {profile_name}: {e}", list_profiles()
 
 def save_profile_action(profile_name, system_info, user_prompt):
     if profile_name is None:
@@ -43,10 +52,10 @@ def save_profile_action(profile_name, system_info, user_prompt):
         }
         with open(f"prompt_profiles/{profile_name}.json", 'w') as f:
             json.dump(profile, f)
-        return f"Profile {profile_name} saved."
+        return f"Profile {profile_name} saved.", list_profiles()
     except Exception as e:
         print(f"Error saving profile {profile_name}: {e}")
-
+        return f"Error saving profile {profile_name}: {e}", list_profiles()
 
 def process_file_and_return_markdown(file, system_info, prompt, option):
     if file is None:
@@ -107,11 +116,13 @@ def main():
                 user_prompt_input = gr.TextArea(label="User prompt", value=default_user_prompt)
                 option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
                 with gr.Row():
-                    with gr.Column(scale=8):
-                        profile_input = gr.Dropdown(label="Profile name", choices=profiles, value=profiles[0] if profiles else None,
-                                                interactive=True)
-                    with gr.Column(scale=2):
-                        reload_button = gr.Button("🔄", elem_classes="small-button")
+                    with gr.Column(scale=7):
+                        profile_input = gr.Dropdown(label="Profile name", choices=profiles, value="[Select profile]",
+                                                    interactive=True)
+                    with gr.Column(scale=1.5):
+                        reload_button = gr.Button("🔄 refresh", elem_classes="small-button")
+                    with gr.Column(scale=1.5):
+                        del_button = gr.Button("delete profile", elem_classes="small-button")
 
                 with gr.Row():
                     with gr.Column(scale=8):
@@ -127,10 +138,19 @@ def main():
         reload_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
         save_button.click(fn=save_profile_action,
                           inputs=[save_profile_name_input, system_info_input, user_prompt_input],
-                          outputs=output)
+                          outputs=[output, profile_input])
         submit_button.click(fn=process_file_and_return_markdown,
                             inputs=[file_input, system_info_input, user_prompt_input, option_input],
                             outputs=output)
+        del_button.click(fn=delete_profile, inputs=profile_input, outputs=[output, profile_input])
+
+        # Ensure the profile list is reloaded after save or delete actions, seemingly a race condition, so this needs
+        # repeating here even though the save and del buttons already call reload_profiles
+        save_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
+        del_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
+
+        # also reload the current profile after save (since it seems to blank it out)
+        save_button.click(fn=update_textareas, inputs=save_profile_name_input, outputs=[system_info_input, user_prompt_input])
 
     auth = None
     if args.user and args.password:
