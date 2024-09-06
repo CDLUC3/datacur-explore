@@ -9,3 +9,4 @@ vertexai
 striprtf
 google
 pyyaml
+requests

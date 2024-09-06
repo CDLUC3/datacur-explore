@@ -7,6 +7,7 @@ import google_api_code
 import argparse
 import os
 import json
+import repo_factory
 
 # looking at https://www.cloudskillsboost.google/course_templates/552?utm_campaign=FY24-Q2-global-website-skillsboost&utm_content=developers&utm_medium=et&utm_source=cgc-site&utm_term=-
 # vertex ai studio
@@ -57,6 +58,16 @@ def save_profile_action(profile_name, system_info, user_prompt):
         print(f"Error saving profile {profile_name}: {e}")
         return f"Error saving profile {profile_name}: {e}", list_profiles()
 
+def load_file_list(doi):
+    try:
+        repo = repo_factory.repo_factory(doi)
+    except ValueError as e:
+        return f"Error loading DOI: {e}"
+    file_list = repo.get_filenames_and_links()
+    file_list = [(key, value) for item in file_list for key, value in item.items()]
+    file_list.insert(0, ('[Select file after looking up DOI]', '[Select file after looking up DOI]'))
+    return gr.update(choices=file_list, value='[Select file after looking up DOI]', visible=True)
+
 def process_file_and_return_markdown(file, system_info, prompt, option):
     if file is None:
         return "No file was uploaded."
@@ -76,6 +87,12 @@ def update_textareas(profile_name):
 
 def reload_profiles():
     return gr.update(choices=list_profiles())
+
+def update_inputs(input_method):
+    if input_method == "Upload file":
+        return gr.update(visible=True), gr.update(visible=False)
+    elif input_method == "Dryad or Zenodo DOI":
+        return gr.update(visible=False), gr.update(visible=True)
 
 def main():
     parser = argparse.ArgumentParser(description="Run the Gradio app with specified options.")
@@ -111,7 +128,19 @@ def main():
         with gr.Row():
             with gr.Column(scale=1):
                 gr.Markdown("# Basic data quality analysis with LLMs")
-                file_input = gr.File(label="Upload file")
+                input_method = gr.Radio(label="Choose an input method", choices=["Upload file", "Dryad or Zenodo DOI"], value="Upload file")
+                file_input = gr.File(label="Upload file", visible=True)
+                with gr.Group(visible=False) as doi_group:
+                    with gr.Row():
+                        with gr.Column(scale=7):
+                            doi_input = gr.Textbox(label="Dryad or Zenodo DOI", placeholder="e.g. 10.5061/dryad.8515j")
+                        with gr.Column(scale=3):
+                            load_doi_button = gr.Button("Lookup DOI", elem_classes="small-button")
+                    with gr.Row():
+                        select_file = gr.Dropdown(label="Choose file to analyze",
+                                                  value='[Select file after looking up DOI]',
+                                                  choices=[('[Select file after Looking up DOI]', '[Select file after looking up DOI]')],
+                                                  interactive=True)
                 system_info_input = gr.TextArea(label="System conditioning", value=default_system_info)
                 user_prompt_input = gr.TextArea(label="User prompt", value=default_user_prompt)
                 option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
@@ -134,6 +163,7 @@ def main():
             with gr.Column(scale=1):
                 output = gr.Markdown()
 
+        input_method.change(fn=update_inputs, inputs=input_method, outputs=[file_input, doi_group])
         profile_input.change(fn=update_textareas, inputs=profile_input, outputs=[system_info_input, user_prompt_input])
         reload_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
         save_button.click(fn=save_profile_action,
@@ -151,6 +181,8 @@ def main():
 
         # also reload the current profile after save (since it seems to blank it out)
         save_button.click(fn=update_textareas, inputs=save_profile_name_input, outputs=[system_info_input, user_prompt_input])
+
+        load_doi_button.click(fn=load_file_list, inputs=doi_input, outputs=select_file)
 
     auth = None
     if args.user and args.password:
