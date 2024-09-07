@@ -8,6 +8,7 @@ import argparse
 import os
 import json
 import repo_factory
+import file_reading_util
 
 # looking at https://www.cloudskillsboost.google/course_templates/552?utm_campaign=FY24-Q2-global-website-skillsboost&utm_content=developers&utm_medium=et&utm_source=cgc-site&utm_term=-
 # vertex ai studio
@@ -64,20 +65,32 @@ def load_file_list(doi):
     except ValueError as e:
         return f"Error loading DOI: {e}"
     file_list = repo.get_filenames_and_links()
-    file_list = [(key, value) for item in file_list for key, value in item.items()]
-    file_list.insert(0, ('[Select file after looking up DOI]', '[Select file after looking up DOI]'))
-    return gr.update(choices=file_list, value='[Select file after looking up DOI]', visible=True)
+    # file_list = [(key, value) for item in file_list for key, value in item.items()]
+    # file_list.insert(0, ('[Select file after looking up DOI]', '[Select file after looking up DOI]'))
+    # return gr.update(choices=file_list, value='[Select file after looking up DOI]', visible=True)
+    choices = {key: value for item in file_list for key, value in item.items()}
+    choices['[Select file after looking up DOI]'] = '[Select file after looking up DOI]'
+    return gr.update(choices=list(choices.keys()), value='[Select file after looking up DOI]', visible=True), choices
 
-def process_file_and_return_markdown(file, system_info, prompt, option):
-    if file is None:
-        return "No file was uploaded."
+def process_file_and_return_markdown(file, system_info, prompt, option, input_method, select_file, choices):
+    if input_method == 'Upload file' and file is None:
+        return "# No file was uploaded."
+    elif input_method == 'Dryad or Zenodo DOI' and select_file == '[Select file after looking up DOI]':
+        return "# The doi needs to be looked up and a file selected."
 
-    f_name = os.path.basename(file.name)
+    if input_method == 'Dryad or Zenodo DOI':
+        file_url = choices.get(select_file)
+        # Download the file from the URL and save it to a temporary file
+        file_path = file_reading_util.download_file(file_url, select_file)
+    else:
+        file_path = file.name
+
+    f_name = os.path.basename(file_path)
     if option == "GPT-4o":
-        response = open_api_code.generate(file.name, system_info, prompt)
+        response = open_api_code.generate(file_path, system_info, prompt)
         response = f"# Analyzed by GPT-4o:\n\nFile name: {f_name}\n\n" + response
     elif option == "Gemini-1.5-flash-001":
-        response = google_api_code.generate(file.name, system_info, prompt)
+        response = google_api_code.generate(file_path, system_info, prompt)
         response = f"# Analyzed by Gemini-1.5-flash-001:\n\nFile name: {f_name}\n\n" + response
     return response
 
@@ -145,12 +158,12 @@ def main():
                 user_prompt_input = gr.TextArea(label="User prompt", value=default_user_prompt)
                 option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
                 with gr.Row():
-                    with gr.Column(scale=7):
+                    with gr.Column(scale=6):
                         profile_input = gr.Dropdown(label="Profile name", choices=profiles, value="[Select profile]",
                                                     interactive=True)
-                    with gr.Column(scale=1.5):
+                    with gr.Column(scale=2):
                         reload_button = gr.Button("🔄 refresh", elem_classes="small-button")
-                    with gr.Column(scale=1.5):
+                    with gr.Column(scale=2):
                         del_button = gr.Button("delete profile", elem_classes="small-button")
 
                 with gr.Row():
@@ -164,25 +177,30 @@ def main():
                 output = gr.Markdown()
 
         input_method.change(fn=update_inputs, inputs=input_method, outputs=[file_input, doi_group])
+
+        # PROFILE ACTIONS
         profile_input.change(fn=update_textareas, inputs=profile_input, outputs=[system_info_input, user_prompt_input])
         reload_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
         save_button.click(fn=save_profile_action,
                           inputs=[save_profile_name_input, system_info_input, user_prompt_input],
                           outputs=[output, profile_input])
-        submit_button.click(fn=process_file_and_return_markdown,
-                            inputs=[file_input, system_info_input, user_prompt_input, option_input],
-                            outputs=output)
-        del_button.click(fn=delete_profile, inputs=profile_input, outputs=[output, profile_input])
-
-        # Ensure the profile list is reloaded after save or delete actions, seemingly a race condition, so this needs
-        # repeating here even though the save and del buttons already call reload_profiles
         save_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
+        save_button.click(fn=update_textareas, inputs=save_profile_name_input,
+                          outputs=[system_info_input, user_prompt_input])
+        del_button.click(fn=delete_profile, inputs=profile_input, outputs=[output, profile_input])
         del_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
 
-        # also reload the current profile after save (since it seems to blank it out)
-        save_button.click(fn=update_textareas, inputs=save_profile_name_input, outputs=[system_info_input, user_prompt_input])
 
-        load_doi_button.click(fn=load_file_list, inputs=doi_input, outputs=select_file)
+        # DOI ACTIONS
+        choices_state = gr.State()
+        load_doi_button.click(fn=load_file_list, inputs=doi_input, outputs=[select_file, choices_state])
+
+        # SUBMIT ACTIONS
+        submit_button.click(fn=process_file_and_return_markdown,
+                            inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_file, choices_state],
+                            outputs=output)
+
+
 
     auth = None
     if args.user and args.password:

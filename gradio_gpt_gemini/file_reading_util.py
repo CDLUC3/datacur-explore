@@ -1,7 +1,12 @@
+import pdb
+
 import pandas as pd
 import codecs
 from striprtf.striprtf import rtf_to_text
 import mimetypes
+import tempfile
+import requests
+import os
 
 
 def convert_rtf_to_text(rtf_file_path):
@@ -38,3 +43,33 @@ def get_csv_content(from_file):
         csv_content = read_first_of_file(from_file)[0:10000]
 
     return csv_content
+
+
+def download_file(url, filename=None):
+    # Define the maximum size to download (5MB)
+    max_size = 5 * 1024 * 1024  # 5MB in bytes
+    chunk_size = 1024  # 1KB
+
+    # Create a temporary file or use the specified filename
+    if filename:
+        temp_file_path = filename
+    else:
+        temp_file = tempfile.NamedTemporaryFile(delete=False)
+        temp_file_path = temp_file.name
+
+    # Download the file from the internet in chunks
+    response = requests.get(url, stream=True)
+    response.raise_for_status()  # Check if the request was successful
+
+    total_size = 0
+    with open(temp_file_path, 'wb') as file:
+        for chunk in response.iter_content(chunk_size=chunk_size):
+            if chunk:  # filter out keep-alive new chunks
+                total_size += len(chunk)
+                if total_size > max_size:
+                    file.write(chunk[:max_size - total_size + len(chunk)])
+                    break
+                file.write(chunk)
+
+    print(f"File downloaded and saved to: {temp_file_path}")
+    return temp_file_path
