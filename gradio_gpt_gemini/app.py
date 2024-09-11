@@ -10,6 +10,10 @@ import json
 import repo_factory
 import file_reading_util
 
+`# Read the local CSS file
+with open("styles.css", "r") as css_file:
+    css_content = css_file.read()
+
 # looking at https://www.cloudskillsboost.google/course_templates/552?utm_campaign=FY24-Q2-global-website-skillsboost&utm_content=developers&utm_medium=et&utm_source=cgc-site&utm_term=-
 # vertex ai studio
 
@@ -137,43 +141,38 @@ def main():
     profiles = list_profiles()
 
     # Create the Gradio interface with additional text inputs
-    with gr.Blocks() as iface:
+    with gr.Blocks(css=css_content) as iface:
         with gr.Row():
-            with gr.Column(scale=1):
-                gr.Markdown("# Basic data quality analysis with LLMs")
+            gr.Markdown("# Basic data quality analysis with LLMs")
+        with gr.Row():
+            with gr.Column():
                 input_method = gr.Radio(label="Choose an input method", choices=["Upload file", "Dryad or Zenodo DOI"], value="Upload file")
                 file_input = gr.File(label="Upload file", visible=True)
-                with gr.Group(visible=False) as doi_group:
-                    with gr.Row():
-                        with gr.Column(scale=7):
-                            doi_input = gr.Textbox(label="Dryad or Zenodo DOI", placeholder="e.g. 10.5061/dryad.8515j")
-                        with gr.Column(scale=3):
-                            load_doi_button = gr.Button("Lookup DOI", elem_classes="small-button")
+                with gr.Group(visible=False, elem_classes='grp-style') as doi_group:
+                    with gr.Row(elem_classes="bottom-align grp-style"):
+                        doi_input = gr.Textbox(label="Dryad or Zenodo DOI", placeholder="e.g. 10.5061/dryad.8515j", scale=3)
+                        load_doi_button = gr.Button("Lookup DOI", elem_classes="small-button margin-bottom", scale=1)
                     with gr.Row():
                         select_file = gr.Dropdown(label="Choose file to analyze",
                                                   value='[Select file after looking up DOI]',
                                                   choices=[('[Select file after Looking up DOI]', '[Select file after looking up DOI]')],
                                                   interactive=True)
-                system_info_input = gr.TextArea(label="System conditioning", value=default_system_info)
-                user_prompt_input = gr.TextArea(label="User prompt", value=default_user_prompt)
-                option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
-                with gr.Row():
-                    with gr.Column(scale=6):
-                        profile_input = gr.Dropdown(label="Profile name", choices=profiles, value="[Select profile]",
-                                                    interactive=True)
-                    with gr.Column(scale=2):
-                        reload_button = gr.Button("🔄 refresh", elem_classes="small-button")
-                    with gr.Column(scale=2):
-                        del_button = gr.Button("delete profile", elem_classes="small-button")
-
-                with gr.Row():
-                    with gr.Column(scale=8):
+                with gr.Accordion("Prompting", open=True):
+                    system_info_input = gr.TextArea(label="System conditioning", value=default_system_info)
+                    user_prompt_input = gr.TextArea(label="User prompt", value=default_user_prompt)
+                with gr.Accordion("Profile management", open=False):
+                    with gr.Row(elem_classes="bottom-align"):
+                        profile_input = gr.Dropdown(label="Load profile name", choices=profiles, value="[Select profile]",
+                                                    interactive=True, scale=4)
+                        reload_button = gr.Button("🔄 refresh", elem_classes="small-button", scale=1)
+                        del_button = gr.Button("delete profile", elem_classes="small-button", scale=1)
+                    with gr.Row(elem_classes="bottom-align"):
                         save_profile_name_input = gr.Textbox(label="Profile name to save")
-                    with gr.Column(scale=2):
-                        save_button = gr.Button("Save Profile")
+                        save_button = gr.Button("Save Profile", elem_classes="small-button")
 
+                option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
                 submit_button = gr.Button("Submit to LLM")
-            with gr.Column(scale=1):
+            with gr.Column(elem_id="right-column", elem_classes="column"):
                 output = gr.Markdown()
 
         input_method.change(fn=update_inputs, inputs=input_method, outputs=[file_input, doi_group])
@@ -199,8 +198,6 @@ def main():
         submit_button.click(fn=process_file_and_return_markdown,
                             inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_file, choices_state],
                             outputs=output)
-
-
 
     auth = None
     if args.user and args.password:
