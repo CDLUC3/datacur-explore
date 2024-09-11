@@ -9,8 +9,9 @@ import os
 import json
 import repo_factory
 import file_reading_util
+import utils
 
-`# Read the local CSS file
+# Read the local CSS file
 with open("styles.css", "r") as css_file:
     css_content = css_file.read()
 
@@ -20,96 +21,6 @@ with open("styles.css", "r") as css_file:
 # https://medium.com/@nimritakoul01/getting-started-with-gradio-python-library-49e59e363c66 seems a good intro to gradio
 # https://gradio.app/docs#quickstart
 # https://gradio.app/docs#gr.Interface
-
-def list_profiles():
-    try:
-        profiles = [f.split('.')[0] for f in os.listdir('prompt_profiles') if f.endswith('.json')]
-        return ["[Select profile]"] + profiles
-    except Exception as e:
-        print(f"Error listing profiles: {e}")
-        return ["[Select profile]"]
-
-def load_profile(profile_name):
-    try:
-        with open(f"prompt_profiles/{profile_name}.json", 'r') as f:
-            profile = json.load(f)
-        return profile['system_info'], profile['user_prompt']
-    except Exception as e:
-        print(f"Error loading profile {profile_name}: {e}")
-        return "", ""
-
-def delete_profile(profile_name):
-    try:
-        os.remove(f"prompt_profiles/{profile_name}.json")
-        return f"Profile {profile_name} deleted.", list_profiles()
-    except Exception as e:
-        print(f"Error deleting profile {profile_name}: {e}")
-        return f"Error deleting profile {profile_name}: {e}", list_profiles()
-
-def save_profile_action(profile_name, system_info, user_prompt):
-    if profile_name is None:
-        return "Profile name is required"
-    if profile_name.endswith('.json'):
-        profile_name = profile_name[:-5]
-    try:
-        profile = {
-            "system_info": system_info,
-            "user_prompt": user_prompt
-        }
-        with open(f"prompt_profiles/{profile_name}.json", 'w') as f:
-            json.dump(profile, f)
-        return f"Profile {profile_name} saved.", list_profiles()
-    except Exception as e:
-        print(f"Error saving profile {profile_name}: {e}")
-        return f"Error saving profile {profile_name}: {e}", list_profiles()
-
-def load_file_list(doi):
-    try:
-        repo = repo_factory.repo_factory(doi)
-    except ValueError as e:
-        return f"Error loading DOI: {e}"
-    file_list = repo.get_filenames_and_links()
-    # file_list = [(key, value) for item in file_list for key, value in item.items()]
-    # file_list.insert(0, ('[Select file after looking up DOI]', '[Select file after looking up DOI]'))
-    # return gr.update(choices=file_list, value='[Select file after looking up DOI]', visible=True)
-    choices = {key: value for item in file_list for key, value in item.items()}
-    choices['[Select file after looking up DOI]'] = '[Select file after looking up DOI]'
-    return gr.update(choices=list(choices.keys()), value='[Select file after looking up DOI]', visible=True), choices
-
-def process_file_and_return_markdown(file, system_info, prompt, option, input_method, select_file, choices):
-    if input_method == 'Upload file' and file is None:
-        return "# No file was uploaded."
-    elif input_method == 'Dryad or Zenodo DOI' and select_file == '[Select file after looking up DOI]':
-        return "# The doi needs to be looked up and a file selected."
-
-    if input_method == 'Dryad or Zenodo DOI':
-        file_url = choices.get(select_file)
-        # Download the file from the URL and save it to a temporary file
-        file_path = file_reading_util.download_file(file_url, select_file)
-    else:
-        file_path = file.name
-
-    f_name = os.path.basename(file_path)
-    if option == "GPT-4o":
-        response = open_api_code.generate(file_path, system_info, prompt)
-        response = f"# Analyzed by GPT-4o:\n\nFile name: {f_name}\n\n" + response
-    elif option == "Gemini-1.5-flash-001":
-        response = google_api_code.generate(file_path, system_info, prompt)
-        response = f"# Analyzed by Gemini-1.5-flash-001:\n\nFile name: {f_name}\n\n" + response
-    return response
-
-def update_textareas(profile_name):
-    system_info, user_prompt = load_profile(profile_name)
-    return system_info, user_prompt
-
-def reload_profiles():
-    return gr.update(choices=list_profiles())
-
-def update_inputs(input_method):
-    if input_method == "Upload file":
-        return gr.update(visible=True), gr.update(visible=False)
-    elif input_method == "Dryad or Zenodo DOI":
-        return gr.update(visible=False), gr.update(visible=True)
 
 def main():
     parser = argparse.ArgumentParser(description="Run the Gradio app with specified options.")
@@ -138,7 +49,7 @@ def main():
         'improved for reuse and reproducibility?')
 
     options = ["GPT-4o", "Gemini-1.5-flash-001"]
-    profiles = list_profiles()
+    profiles = utils.list_profiles()
 
     # Create the Gradio interface with additional text inputs
     with gr.Blocks(css=css_content) as iface:
@@ -146,11 +57,13 @@ def main():
             gr.Markdown("# Basic data quality analysis with LLMs")
         with gr.Row():
             with gr.Column():
-                input_method = gr.Radio(label="Choose an input method", choices=["Upload file", "Dryad or Zenodo DOI"], value="Upload file")
+                input_method = gr.Radio(label="Choose an input method", choices=["Upload file", "Dryad or Zenodo DOI"],
+                                        value="Upload file")
                 file_input = gr.File(label="Upload file", visible=True)
                 with gr.Group(visible=False, elem_classes='grp-style') as doi_group:
                     with gr.Row(elem_classes="bottom-align grp-style"):
-                        doi_input = gr.Textbox(label="Dryad or Zenodo DOI", placeholder="e.g. 10.5061/dryad.8515j", scale=3)
+                        doi_input = gr.Textbox(label="Dryad or Zenodo DOI", placeholder="e.g. 10.5061/dryad.8515j",
+                                               scale=3)
                         load_doi_button = gr.Button("Lookup DOI", elem_classes="small-button margin-bottom", scale=1)
                     with gr.Row():
                         select_file = gr.Dropdown(label="Choose file to analyze",
@@ -175,27 +88,26 @@ def main():
             with gr.Column(elem_id="right-column", elem_classes="column"):
                 output = gr.Markdown()
 
-        input_method.change(fn=update_inputs, inputs=input_method, outputs=[file_input, doi_group])
+        input_method.change(fn=lambda x: utils.update_inputs(gr, x), inputs=input_method, outputs=[file_input, doi_group])
 
         # PROFILE ACTIONS
-        profile_input.change(fn=update_textareas, inputs=profile_input, outputs=[system_info_input, user_prompt_input])
-        reload_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
-        save_button.click(fn=save_profile_action,
+        profile_input.change(fn=utils.update_textareas, inputs=profile_input, outputs=[system_info_input, user_prompt_input])
+        reload_button.click(fn=lambda: utils.reload_profiles(gr), inputs=None, outputs=profile_input)
+        save_button.click(fn=utils.save_profile_action,
                           inputs=[save_profile_name_input, system_info_input, user_prompt_input],
                           outputs=[output, profile_input])
-        save_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
-        save_button.click(fn=update_textareas, inputs=save_profile_name_input,
+        save_button.click(fn=lambda: utils.reload_profiles(gr), inputs=None, outputs=profile_input)
+        save_button.click(fn=utils.update_textareas, inputs=save_profile_name_input,
                           outputs=[system_info_input, user_prompt_input])
-        del_button.click(fn=delete_profile, inputs=profile_input, outputs=[output, profile_input])
-        del_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
-
+        del_button.click(fn=utils.delete_profile, inputs=profile_input, outputs=[output, profile_input])
+        del_button.click(fn=lambda: utils.reload_profiles(gr), inputs=None, outputs=profile_input)
 
         # DOI ACTIONS
         choices_state = gr.State()
-        load_doi_button.click(fn=load_file_list, inputs=doi_input, outputs=[select_file, choices_state])
+        load_doi_button.click(fn=lambda x: utils.load_file_list(gr, x), inputs=doi_input, outputs=[select_file, choices_state])
 
         # SUBMIT ACTIONS
-        submit_button.click(fn=process_file_and_return_markdown,
+        submit_button.click(fn=lambda *args: utils.process_file_and_return_markdown(gr, *args),
                             inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_file, choices_state],
                             outputs=output)
 
