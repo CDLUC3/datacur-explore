@@ -7,6 +7,8 @@ import mimetypes
 import tempfile
 import requests
 import os
+import threading
+import time
 
 
 def convert_rtf_to_text(rtf_file_path):
@@ -46,15 +48,16 @@ def get_csv_content(from_file):
 
 
 def download_file(url, filename=None):
-    # Define the maximum size to download (5MB)
     max_size = 300 * 1024 * 1024  # 300MB in bytes
     chunk_size = 1024  # 1KB
 
+    directory = 'dl_files'
+
     # Create a temporary file or use the specified filename
     if filename:
-        temp_file_path = filename
+        temp_file_path = os.path.join(directory, filename)
     else:
-        temp_file = tempfile.NamedTemporaryFile(delete=False)
+        temp_file = tempfile.NamedTemporaryFile(delete=False, dir=directory)
         temp_file_path = temp_file.name
 
     # Download the file from the internet in chunks
@@ -72,4 +75,8 @@ def download_file(url, filename=None):
                 file.write(chunk)
 
     print(f"File downloaded and saved to: {temp_file_path}")
+
+    # Schedule the file to be removed after 1 minute
+    threading.Timer(60, os.remove, [temp_file_path]).start()
+
     return temp_file_path
