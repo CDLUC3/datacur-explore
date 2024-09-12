@@ -46,7 +46,6 @@ def get_csv_content(from_file):
 
 
 def download_file(url, filename=None):
-    # Define the maximum size to download (5MB)
     max_size = 300 * 1024 * 1024  # 300MB in bytes
     chunk_size = 1024  # 1KB
 
