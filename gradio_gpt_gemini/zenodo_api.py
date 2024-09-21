@@ -15,7 +15,7 @@ BASE_URL = 'https://zenodo.org/api/'
 
 class ZenodoApi(RepoInterface):
     def __init__(self, doi):
-        self.doi = doi
+        self.doi = self._fix_format_of_doi(doi)
 
     def id_exists(self):
         return not (self.get_metadata() is None)
