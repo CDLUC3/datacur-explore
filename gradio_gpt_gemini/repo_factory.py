@@ -9,14 +9,14 @@ from zenodo_api import ZenodoApi
 # repo.id_exists()
 
 def repo_factory(doi):
-    if doi.startswith("10.5061/dryad"):
+    if "dryad" in doi:
         return DryadApi(doi)
-    elif doi.startswith("10.5281/zenodo"):
+    elif "zenodo" in doi:
         return ZenodoApi(doi)
     else:
         my_class = DryadApi(doi)
         if my_class.id_exists():
-            return
+            return my_class
         else:
             my_class = ZenodoApi(doi)
             if my_class.id_exists():
