@@ -105,7 +105,8 @@ def reload_profiles():
 def list_profiles():
     try:
         profiles = [f.split('.')[0] for f in os.listdir('prompt_profiles') if f.endswith('.json')]
-        return ["[Select profile]"] + profiles
+        sorted_profiles = sorted(profiles, key=lambda s: s.lower())
+        return ["[Select profile]"] + sorted_profiles
     except Exception as e:
         print(f"Error listing profiles: {e}")
         return ["[Select profile]"]
