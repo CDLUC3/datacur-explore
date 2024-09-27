@@ -8,14 +8,6 @@ import google_api_code
 import time
 import gradio as gr
 
-def list_profiles():
-    try:
-        profiles = [f.split('.')[0] for f in os.listdir('prompt_profiles') if f.endswith('.json')]
-        return ["[Select profile]"] + profiles
-    except Exception as e:
-        print(f"Error listing profiles: {e}")
-        return ["[Select profile]"]
-
 def load_profile(profile_name):
     try:
         with open(f"prompt_profiles/{profile_name}.json", 'r') as f:
@@ -66,10 +58,10 @@ def load_file_list(doi):
 
 def process_file_and_return_markdown(file, system_info, prompt, option, input_method, select_file, choices, completed_state):
     if input_method == 'Upload file' and file is None:
-        yield "# No file was uploaded."
+        yield '', '', "No file was uploaded."
         return
     elif input_method == 'Dryad or Zenodo DOI' and select_file == '[Select file after looking up DOI]':
-        yield "# The doi needs to be looked up and a file selected."
+        yield '', '', "The doi needs to be looked up and a file selected."
         return
 
     if input_method == 'Dryad or Zenodo DOI':
@@ -84,25 +76,14 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
         # for partial_response in open_api_code.generate_stream(file_path, system_info, prompt):
         #     yield f"# Analyzed by GPT-4o:\n\nFile name: {f_name}\n\n" + partial_response
     elif option == "Gemini-1.5-flash-001":
-        words = ['# A ', 'cat ', 'is ', 'looking ', 'at ', 'a ', 'dog', '.']
-        text_accum = "" # accumulate the text
-        counter = 0
-        for word in words:
-            counter += 1
-            text_accum += word
-            # yield text_accum, text_accum, False
-            yield (gr.update(visible=True, value=text_accum),
-                    gr.update(visible=False, value=text_accum),
-                    f'running {counter}')
-            time.sleep(1)
+        yield from google_api_code.generate(file_path, system_info, prompt)
 
         print('GETTING TO RETURN VALUE')
-        yield (gr.update(visible=False, value=text_accum),
-                gr.update(visible=True, value=text_accum),
+
+        # note that return doesn't work right for final value. you need to yield it instead
+        yield (gr.update(visible=False),
+                gr.update(visible=True),
                 'Done')
-        # note that return doesn't work right for final value and you need to yield it
-        # for partial_response in google_api_code.generate_stream(file_path, system_info, prompt):
-        #     yield f"# Analyzed by Gemini-1.5-flash-001:\n\nFile name: {f_name}\n\n" + partial_response
 
 def update_inputs(input_method):
     if input_method == "Upload file":
@@ -117,5 +98,13 @@ def update_textareas(profile_name):
 
 def reload_profiles():
     return gr.update(choices=list_profiles())
+
+def list_profiles():
+    try:
+        profiles = [f.split('.')[0] for f in os.listdir('prompt_profiles') if f.endswith('.json')]
+        return ["[Select profile]"] + profiles
+    except Exception as e:
+        print(f"Error listing profiles: {e}")
+        return ["[Select profile]"]
 
 

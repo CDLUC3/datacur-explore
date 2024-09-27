@@ -46,9 +46,9 @@ def generate(from_file, system_info, prompt):
 
     out_text = ""
 
+    yield out_text, out_text, 'Running'
     for response in responses:
         out_text += response.text
+        yield out_text, out_text, 'Running'
         print(response.text, end="")
-
-    return out_text
 
