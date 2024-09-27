@@ -72,9 +72,12 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
 
     f_name = os.path.basename(file_path)
     if option == "GPT-4o":
-        return open_api_code.generate_stream(file_path, system_info, prompt)
-        # for partial_response in open_api_code.generate_stream(file_path, system_info, prompt):
-        #     yield f"# Analyzed by GPT-4o:\n\nFile name: {f_name}\n\n" + partial_response
+        yield from open_api_code.generate_stream(file_path, system_info, prompt)
+
+        # note that return doesn't work right for final value. you need to yield it instead
+        yield (gr.update(visible=False),
+               gr.update(visible=True),
+               'Done')
     elif option == "Gemini-1.5-flash-001":
         yield from google_api_code.generate(file_path, system_info, prompt)
 
