@@ -87,8 +87,8 @@ def main():
                 submit_button = gr.Button("Submit to LLM")
             with gr.Column(elem_id="right-column", elem_classes="column"):
                 status_output = gr.Textbox(visible=True, label="Status", placeholder="Status messages will appear here")
-                textbox_output = gr.Textbox(visible=True, show_label=False, placeholder="Output will appear here")
-                markdown_output = gr.Markdown(visible=False)
+                textbox_output = gr.Textbox(visible=False, show_label=False, placeholder="Output will appear here")
+                markdown_output = gr.Markdown(visible=True)
 
         input_method.change(fn=utils.update_inputs, inputs=input_method, outputs=[file_input, doi_group])
 
