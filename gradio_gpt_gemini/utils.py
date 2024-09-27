@@ -5,14 +5,8 @@ import repo_factory
 import file_reading_util
 import open_api_code
 import google_api_code
-
-def list_profiles():
-    try:
-        profiles = [f.split('.')[0] for f in os.listdir('prompt_profiles') if f.endswith('.json')]
-        return ["[Select profile]"] + profiles
-    except Exception as e:
-        print(f"Error listing profiles: {e}")
-        return ["[Select profile]"]
+import time
+import gradio as gr
 
 def load_profile(profile_name):
     try:
@@ -31,9 +25,10 @@ def delete_profile(profile_name):
         print(f"Error deleting profile {profile_name}: {e}")
         return f"Error deleting profile {profile_name}: {e}", list_profiles()
 
+# status_output, profile_input
 def save_profile_action(profile_name, system_info, user_prompt):
     if profile_name is None:
-        return "Profile name is required"
+        return "Profile name is required", list_profiles()
     if profile_name.endswith('.json'):
         profile_name = profile_name[:-5]
     try:
@@ -43,12 +38,13 @@ def save_profile_action(profile_name, system_info, user_prompt):
         }
         with open(f"prompt_profiles/{profile_name}.json", 'w') as f:
             json.dump(profile, f)
-        return f"Profile {profile_name} saved.", list_profiles()
+        return (f"Profile {profile_name} saved.",
+                gr.Dropdown(label="Load profile name", choices=list_profiles(), value=profile_name))
     except Exception as e:
         print(f"Error saving profile {profile_name}: {e}")
         return f"Error saving profile {profile_name}: {e}", list_profiles()
 
-def load_file_list(gr, doi):
+def load_file_list(doi):
     if doi:
         doi = doi.strip()
     try:
@@ -60,11 +56,13 @@ def load_file_list(gr, doi):
     choices['[Select file after looking up DOI]'] = '[Select file after looking up DOI]'
     return gr.update(choices=list(choices.keys()), value='[Select file after looking up DOI]', visible=True), choices
 
-def process_file_and_return_markdown(gr, file, system_info, prompt, option, input_method, select_file, choices):
+def process_file_and_return_markdown(file, system_info, prompt, option, input_method, select_file, choices, completed_state):
     if input_method == 'Upload file' and file is None:
-        return "# No file was uploaded."
+        yield '', '', "No file was uploaded."
+        return
     elif input_method == 'Dryad or Zenodo DOI' and select_file == '[Select file after looking up DOI]':
-        return "# The doi needs to be looked up and a file selected."
+        yield '', '', "The doi needs to be looked up and a file selected."
+        return
 
     if input_method == 'Dryad or Zenodo DOI':
         file_url = choices.get(select_file)
@@ -74,22 +72,42 @@ def process_file_and_return_markdown(gr, file, system_info, prompt, option, inpu
 
     f_name = os.path.basename(file_path)
     if option == "GPT-4o":
-        response = open_api_code.generate(file_path, system_info, prompt)
-        response = f"# Analyzed by GPT-4o:\n\nFile name: {f_name}\n\n" + response
+        yield from open_api_code.generate_stream(file_path, system_info, prompt)
+
+        # note that return doesn't work right for final value. you need to yield it instead
+        yield (gr.update(visible=False),
+               gr.update(visible=True),
+               'Done')
     elif option == "Gemini-1.5-flash-001":
-        response = google_api_code.generate(file_path, system_info, prompt)
-        response = f"# Analyzed by Gemini-1.5-flash-001:\n\nFile name: {f_name}\n\n" + response
-    return response
+        yield from google_api_code.generate(file_path, system_info, prompt)
 
-def update_textareas(profile_name):
-    system_info, user_prompt = load_profile(profile_name)
-    return system_info, user_prompt
+        print('GETTING TO RETURN VALUE')
 
-def reload_profiles(gr):
-    return gr.update(choices=list_profiles())
+        # note that return doesn't work right for final value. you need to yield it instead
+        yield (gr.update(visible=False),
+                gr.update(visible=True),
+                'Done')
 
-def update_inputs(gr, input_method):
+def update_inputs(input_method):
     if input_method == "Upload file":
         return gr.update(visible=True), gr.update(visible=False)
     elif input_method == "Dryad or Zenodo DOI":
         return gr.update(visible=False), gr.update(visible=True)
+
+# These are utility functions, and not Gradio handlers, I think
+def update_textareas(profile_name):
+    system_info, user_prompt = load_profile(profile_name)
+    return system_info, user_prompt
+
+def reload_profiles():
+    return gr.update(choices=list_profiles())
+
+def list_profiles():
+    try:
+        profiles = [f.split('.')[0] for f in os.listdir('prompt_profiles') if f.endswith('.json')]
+        return ["[Select profile]"] + profiles
+    except Exception as e:
+        print(f"Error listing profiles: {e}")
+        return ["[Select profile]"]
+
+

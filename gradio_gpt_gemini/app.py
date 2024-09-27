@@ -86,30 +86,32 @@ def main():
                 option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
                 submit_button = gr.Button("Submit to LLM")
             with gr.Column(elem_id="right-column", elem_classes="column"):
-                output = gr.Markdown()
+                status_output = gr.Textbox(visible=True, label="Status", placeholder="Status messages will appear here")
+                textbox_output = gr.Textbox(visible=True, show_label=False, placeholder="Output will appear here")
+                markdown_output = gr.Markdown(visible=False)
 
-        input_method.change(fn=lambda x: utils.update_inputs(gr, x), inputs=input_method, outputs=[file_input, doi_group])
+        input_method.change(fn=utils.update_inputs, inputs=input_method, outputs=[file_input, doi_group])
 
         # PROFILE ACTIONS
         profile_input.change(fn=utils.update_textareas, inputs=profile_input, outputs=[system_info_input, user_prompt_input])
-        reload_button.click(fn=lambda: utils.reload_profiles(gr), inputs=None, outputs=profile_input)
+        reload_button.click(fn=utils.reload_profiles, inputs=None, outputs=profile_input)
         save_button.click(fn=utils.save_profile_action,
                           inputs=[save_profile_name_input, system_info_input, user_prompt_input],
-                          outputs=[output, profile_input])
-        save_button.click(fn=lambda: utils.reload_profiles(gr), inputs=None, outputs=profile_input)
-        save_button.click(fn=utils.update_textareas, inputs=save_profile_name_input,
-                          outputs=[system_info_input, user_prompt_input])
-        del_button.click(fn=utils.delete_profile, inputs=profile_input, outputs=[output, profile_input])
-        del_button.click(fn=lambda: utils.reload_profiles(gr), inputs=None, outputs=profile_input)
+                          outputs=[status_output, profile_input])
+
+        del_button.click(fn=utils.delete_profile,inputs=profile_input,outputs=[status_output, profile_input])
 
         # DOI ACTIONS
         choices_state = gr.State()
-        load_doi_button.click(fn=lambda x: utils.load_file_list(gr, x), inputs=doi_input, outputs=[select_file, choices_state])
+        load_doi_button.click(fn=utils.load_file_list, inputs=doi_input, outputs=[select_file, choices_state])
 
         # SUBMIT ACTIONS
-        submit_button.click(fn=lambda *args: utils.process_file_and_return_markdown(gr, *args),
-                            inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_file, choices_state],
-                            outputs=output)
+        # app.py
+        submit_button.click(
+            fn=utils.process_file_and_return_markdown,
+            inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_file, choices_state],
+            outputs=[textbox_output, markdown_output, status_output]
+        )
 
     auth = None
     if args.user and args.password:
