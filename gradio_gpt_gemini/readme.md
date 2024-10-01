@@ -42,7 +42,7 @@ git clone https://github.com/CDLUC3/datacur-explore.git
 cd datacur-explore
 git pull
 
-# Add the file 'config.yaml' inside the  gradio_gpt_gemini directory with contents as explained above.
+# Add the file 'config.yaml' inside the gradio_gpt_gemini directory with contents as explained above.
 # Add the key file for VertexAI outside the application directory and track where it is since you'll need to set an
 # environment variable to point to it.
 ```
@@ -50,16 +50,13 @@ git pull
 ## Running the application
 
 ```bash
-cd datacur-explore/gradio_gpt_gemini  # if you're not already in here
-screen -S gradio_gpt_gemini # create a screen session so you can leave it running in the background
-GOOGLE_APPLICATION_CREDENTIALS=../../path/to/google/file.json python app.py --listen=0.0.0.0
-# ALT-A, D to detach from the screen session
+# we have a control start/stop script (example included in repo) called gradio_control.sh
+# use start|stop|status|restart as arguments
+./gradio_control.sh start
 ```
 
 ## Updating the application
 ```bash
-screen -x  # reattach to the screen session
-# CTRL-C to stop the application
+cd ~/datacur-explore
 git pull
-GOOGLE_APPLICATION_CREDENTIALS=../../path/to/google/file.json python app.py --listen=0.0.0.0
 ```
