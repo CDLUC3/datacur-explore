@@ -7,6 +7,7 @@ import open_api_code
 import google_api_code
 import time
 import gradio as gr
+import pdb
 
 def load_profile(profile_name):
     try:
@@ -50,7 +51,13 @@ def load_file_list(doi):
     try:
         repo = repo_factory.repo_factory(doi)
     except ValueError as e:
-        return f"Error loading DOI: {e}"
+        err = f"Error loading DOI: {e}"
+        return gr.update(choices=[err], value=err, visible=True), [err]
+
+    if not repo.id_exists():
+        err = f"DOI {doi} not found."
+        return gr.update(choices=[err], value=err, visible=True), [err]
+
     file_list = repo.get_filenames_and_links()
     choices = {key: value for item in file_list for key, value in item.items()}
     choices['[Select file after looking up DOI]'] = '[Select file after looking up DOI]'
