@@ -50,6 +50,14 @@ def main():
         'quality metrics and to help visualize the data for other researchers in the same field. How can it be '
         'improved for reuse and reproducibility?')
 
+    # Check if the JSON file exists and load values
+    json_file_path = './prompt_profiles/_default.json'
+    if os.path.exists(json_file_path):
+        with open(json_file_path, 'r') as json_file:
+            data = json.load(json_file)
+            default_system_info = data.get('system_info', default_system_info)
+            default_user_prompt = data.get('user_prompt', default_user_prompt)
+
     options = ["GPT-4o", "Gemini-1.5-flash-001"]
     profiles = utils.list_profiles()
 
@@ -60,12 +68,12 @@ def main():
         with gr.Row():
             with gr.Column():
                 input_method = gr.Radio(label="Choose an input method", choices=["Upload file", "Dryad or Zenodo DOI"],
-                                        value="Upload file")
-                file_input = gr.File(label="Upload file", visible=True)
-                with gr.Group(visible=False, elem_classes='grp-style') as doi_group:
+                                        value="Dryad or Zenodo DOI")
+                file_input = gr.File(label="Upload file", visible=False)
+                with gr.Group(visible=True, elem_classes='grp-style') as doi_group:
                     with gr.Row(elem_classes="bottom-align grp-style"):
                         doi_input = gr.Textbox(label="Dryad or Zenodo DOI", placeholder="e.g. 10.5061/dryad.8515j",
-                                               scale=3)
+                                               value="10.5281/zenodo.13616727", scale=3)
                         load_doi_button = gr.Button("Lookup DOI", elem_classes="small-button margin-bottom", scale=1)
                     with gr.Row():
                         select_file = gr.Dropdown(label="Choose file to analyze",
