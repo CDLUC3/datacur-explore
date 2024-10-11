@@ -8,6 +8,7 @@ import google_api_code
 import time
 import gradio as gr
 import pdb
+import bedrock_llama
 
 def load_profile(profile_name):
     try:
@@ -88,7 +89,12 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
     elif option == "Gemini-1.5-flash-001":
         yield from google_api_code.generate(file_path, system_info, prompt)
 
-        print('GETTING TO RETURN VALUE')
+        # note that return doesn't work right for final value. you need to yield it instead
+        yield (gr.update(visible=False),
+                gr.update(visible=True),
+                'Done')
+    elif option == "llama3.1-70b":
+        yield from bedrock_llama.generate_stream(file_path, system_info, prompt)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),

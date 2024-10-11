@@ -10,3 +10,4 @@ striprtf
 google
 pyyaml
 requests
+boto3
