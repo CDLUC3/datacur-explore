@@ -58,7 +58,7 @@ def main():
             default_system_info = data.get('system_info', default_system_info)
             default_user_prompt = data.get('user_prompt', default_user_prompt)
 
-    options = ["GPT-4o", "Gemini-1.5-flash-001"]
+    options = ["GPT-4o", "Gemini-1.5-flash-001", "llama3.1-70b"]
     profiles = utils.list_profiles()
 
     # Create the Gradio interface with additional text inputs
