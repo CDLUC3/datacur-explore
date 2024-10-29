@@ -11,3 +11,4 @@ google
 pyyaml
 requests
 boto3
+frictionless

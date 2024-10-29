@@ -6,7 +6,7 @@ import json
 from botocore.exceptions import ClientError
 import textwrap
 
-def generate_stream(from_file, system_info, prompt):
+def generate_stream(from_file, system_info, prompt, starting_text=''):
     csv_content = file_reading_util.get_csv_content(from_file)
 
     session = boto3.Session()
@@ -74,7 +74,7 @@ def generate_stream(from_file, system_info, prompt):
         # the temp_chunk and accum are used to accumulate the chunks so that it updates about
         # every 30 characters or so, instead of overly frequently
         temp_chunk = ''
-        accum = ''
+        accum = starting_text
 
         # Extract and print the streamed response text in real-time.
         for event in streaming_response["body"]:
