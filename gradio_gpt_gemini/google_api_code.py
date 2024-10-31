@@ -8,7 +8,7 @@ import mimetypes
 import file_reading_util
 
 
-def generate(from_file, system_info, prompt):
+def generate(from_file, system_info, prompt, starting_text=''):
     file_content = file_reading_util.get_csv_content(from_file)
 
     # for larger files and using their special storage, this URL seems to document how to do it
@@ -44,7 +44,7 @@ def generate(from_file, system_info, prompt):
         stream=True,
     )
 
-    out_text = ""
+    out_text = starting_text
 
     yield out_text, out_text, 'Running'
     for response in responses:

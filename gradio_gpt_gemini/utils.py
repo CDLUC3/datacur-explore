@@ -9,6 +9,7 @@ import time
 import gradio as gr
 import pdb
 import bedrock_llama
+import frictionless_util
 
 def load_profile(profile_name):
     try:
@@ -64,6 +65,17 @@ def load_file_list(doi):
     choices['[Select file after looking up DOI]'] = '[Select file after looking up DOI]'
     return gr.update(choices=list(choices.keys()), value='[Select file after looking up DOI]', visible=True), choices
 
+
+# this is a bit confusing since we are yielding to outputs that update the gradio interface and there
+# are three outputs because of quirks in how Gradio handles updates. I couldn't get it to update correctly unless
+# I included both a markdown and a textbox representation of the same data.
+
+# I was originally going to just have it update the markdown, but it doesn't update if only updated by itself.
+# The docs state that only textboxes are guaranteed to update, so I was going to update the textbox and switch it for
+# markdown on completion. However, I found that if I included both outputs, it would update the markdown as well.
+# I hope this behavior continues to work as expected since it doesn't seem to be explicitly intended.
+
+# The three outputs it has to yield and update are textbox, markdown and status_output (in that order)
 def process_file_and_return_markdown(file, system_info, prompt, option, input_method, select_file, choices, completed_state):
     if input_method == 'Upload file' and file is None:
         yield '', '', "No file was uploaded."
@@ -78,23 +90,32 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
     else:
         file_path = file.name
 
+    # should be able to work with file_path now in Frictionless data
+    if file_path.endswith(('.csv', '.xls', '.xlsx')):
+        frict_info = frictionless_util.get_output(file_path)
+        frict_info = f'## Report from frictionless data validation\n\n{frict_info}\n\n---\n## Report from LLM\n\n'
+        yield frict_info, frict_info, "Processing file..."
+    else:
+        yield '', '', "Only CSV and Excel files are supported."
+
+
     f_name = os.path.basename(file_path)
     if option == "GPT-4o":
-        yield from open_api_code.generate_stream(file_path, system_info, prompt)
+        yield from open_api_code.generate_stream(file_path, system_info, prompt, frict_info)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),
                gr.update(visible=True),
                'Done')
     elif option == "Gemini-1.5-flash-001":
-        yield from google_api_code.generate(file_path, system_info, prompt)
+        yield from google_api_code.generate(file_path, system_info, prompt, frict_info)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),
                 gr.update(visible=True),
                 'Done')
     elif option == "llama3.1-70b":
-        yield from bedrock_llama.generate_stream(file_path, system_info, prompt)
+        yield from bedrock_llama.generate_stream(file_path, system_info, prompt, frict_info)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),

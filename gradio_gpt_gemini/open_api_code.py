@@ -12,24 +12,8 @@ import gradio as gr
 # logging.basicConfig(level=logging.DEBUG)
 
 # Check https://github.com/openai/openai-python for the latest version of the OpenAI Python library.
-def generate(from_file, system_info, prompt):
-    csv_content = file_reading_util.get_csv_content(from_file)
 
-    client = openai.OpenAI(api_key=config.get('openai_api_key'))
-
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": system_info},
-            {"role": "user", "content": prompt + '\n\n' + csv_content}
-        ],
-        max_tokens=4096  # Adjust the max tokens based on your needs
-    )
-
-    return response.choices[0].message.content
-
-
-def generate_stream(from_file, system_info, prompt):
+def generate_stream(from_file, system_info, prompt, starting_text=''):
     csv_content = file_reading_util.get_csv_content(from_file)
 
     client = openai.OpenAI(api_key=config.get('openai_api_key'))
@@ -45,7 +29,7 @@ def generate_stream(from_file, system_info, prompt):
     )
 
     temp_chunk = ''
-    accum = ''
+    accum = starting_text
 
     for chunk in response:
         # print(f"Chunk received: {chunk}")
