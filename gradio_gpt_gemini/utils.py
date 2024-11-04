@@ -1,6 +1,8 @@
 # utils.py
 import os
 import json
+from itertools import accumulate
+
 import repo_factory
 import file_reading_util
 import open_api_code
@@ -76,7 +78,7 @@ def load_file_list(doi):
 # I hope this behavior continues to work as expected since it doesn't seem to be explicitly intended.
 
 # The three outputs it has to yield and update are textbox, markdown and status_output (in that order)
-def process_file_and_return_markdown(file, system_info, prompt, option, input_method, select_file, choices, completed_state):
+def process_file_and_return_markdown(file, system_info, prompt, option, input_method, select_file, choices, doi_input):
     if input_method == 'Upload file' and file is None:
         yield '', '', "No file was uploaded."
         return
@@ -90,32 +92,37 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
     else:
         file_path = file.name
 
+    accum = ''
+    if doi_input:
+        accum += f"# DOI: {doi_input}\n\n"
+
+    accum += f"- Processing file: {file_path}\n\n"
     # should be able to work with file_path now in Frictionless data
     if file_path.endswith(('.csv', '.xls', '.xlsx')):
         frict_info = frictionless_util.get_output(file_path)
-        frict_info = f'## Report from frictionless data validation\n\n{frict_info}\n\n---\n## Report from LLM\n\n'
-        yield frict_info, frict_info, "Processing file..."
+        accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n---\n## Report from LLM\n\n'
+        yield accum, accum, "Processing file..."
     else:
         yield '', '', "Only CSV and Excel files are supported."
 
 
     f_name = os.path.basename(file_path)
     if option == "GPT-4o":
-        yield from open_api_code.generate_stream(file_path, system_info, prompt, frict_info)
+        yield from open_api_code.generate_stream(file_path, system_info, prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),
                gr.update(visible=True),
                'Done')
     elif option == "Gemini-1.5-flash-001":
-        yield from google_api_code.generate(file_path, system_info, prompt, frict_info)
+        yield from google_api_code.generate(file_path, system_info, prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),
                 gr.update(visible=True),
                 'Done')
     elif option == "llama3.1-70b":
-        yield from bedrock_llama.generate_stream(file_path, system_info, prompt, frict_info)
+        yield from bedrock_llama.generate_stream(file_path, system_info, prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),

@@ -119,7 +119,7 @@ def main():
         # app.py
         submit_button.click(
             fn=utils.process_file_and_return_markdown,
-            inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_file, choices_state],
+            inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_file, choices_state, doi_input],
             outputs=[textbox_output, markdown_output, status_output]
         )
 

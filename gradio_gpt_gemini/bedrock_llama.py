@@ -42,6 +42,9 @@ def generate_stream(from_file, system_info, prompt, starting_text=''):
     # Following this prompt, Llama 3 completes it by generating the {{assistant_message}}.
     # It signals the end of the {{assistant_message}} by generating the <|eot_id|>.
 
+    # To add additional history, you need to include the previous user and assistant turns and then ending with assistant
+    # like below as the last message.
+
     full_text_prompt = prompt + '\n\n' + csv_content
     formatted_prompt = textwrap.dedent(f"""
         <|begin_of_text|>

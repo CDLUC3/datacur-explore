@@ -28,6 +28,11 @@ def generate_stream(from_file, system_info, prompt, starting_text=''):
         stream=True
     )
 
+    # See https://www.kdnuggets.com/openai-api-for-beginners-your-easy-to-follow-starter-guide
+    # You may add additional content with the assistant role and content from previous conversation
+    # You may add an image with user, content: {"type": "image_url", "url": "https://example.com/image.jpg"}
+    # and may also base64 encode without URL.
+
     temp_chunk = ''
     accum = starting_text
 
