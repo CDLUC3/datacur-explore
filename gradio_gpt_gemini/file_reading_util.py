@@ -76,7 +76,7 @@ def download_file(url, filename=None):
 
     print(f"File downloaded and saved to: {temp_file_path}")
 
-    # Schedule the file to be removed after 1 minute
-    threading.Timer(60, os.remove, [temp_file_path]).start()
+    # Schedule the file to be removed after 3 minutes
+    threading.Timer(180, os.remove, [temp_file_path]).start()
 
     return temp_file_path

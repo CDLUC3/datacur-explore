@@ -12,6 +12,10 @@ import gradio as gr
 import pdb
 import bedrock_llama
 import frictionless_util
+import cProfile
+import pstats
+from io import StringIO
+
 
 def load_profile(profile_name):
     try:
@@ -99,7 +103,17 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
     accum += f"- Processing file: {file_path}\n\n"
     # should be able to work with file_path now in Frictionless data
     if file_path.endswith(('.csv', '.xls', '.xlsx')):
+        profiler = cProfile.Profile()
+        profiler.enable()
         frict_info = frictionless_util.get_output(file_path)
+        profiler.disable()
+
+        # Print the profiling results
+        result = StringIO()
+        ps = pstats.Stats(profiler, stream=result).sort_stats(pstats.SortKey.CUMULATIVE)
+        ps.print_stats()
+        print(result.getvalue())
+
         accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n---\n## Report from LLM\n\n'
         yield accum, accum, "Processing file..."
     else:
