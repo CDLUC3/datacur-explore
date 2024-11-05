@@ -117,7 +117,7 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
         print(result.getvalue())
 
         if frict_info == "":
-            accum += "No issues reported using the default Frictionless consistency checks."
+            frict_info = "No issues reported using the default Frictionless consistency checks."
 
         accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n---\n## Report from LLM\n\n'
         yield accum, accum, "Processing file..."
