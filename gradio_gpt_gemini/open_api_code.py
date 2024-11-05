@@ -48,8 +48,8 @@ def generate_stream(from_file, system_info, prompt, starting_text=''):
                 if len(temp_chunk) > 30:
                     accum += temp_chunk
                     temp_chunk = ''
-                    yield accum, accum, 'Running'
+                    yield accum, accum, 'Running ChatGPT generation'
 
     if temp_chunk:
         accum += temp_chunk
-    yield accum, accum, 'Running'
+    yield accum, accum, 'Finished ChatGPT generation'

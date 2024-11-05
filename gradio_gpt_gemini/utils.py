@@ -91,6 +91,7 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
         return
 
     if input_method == 'Dryad or Zenodo DOI':
+        yield '', '', "Downloading file from repository..."
         file_url = choices.get(select_file)
         file_path = file_reading_util.download_file(file_url, select_file)
     else:
@@ -103,6 +104,7 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
     accum += f"- Processing file: {file_path}\n\n"
     # should be able to work with file_path now in Frictionless data
     if file_path.endswith(('.csv', '.xls', '.xlsx')):
+        yield '', '', "Running Frictionless examination..."
         profiler = cProfile.Profile()
         profiler.enable()
         frict_info = frictionless_util.get_output(file_path)
@@ -114,11 +116,15 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
         ps.print_stats()
         print(result.getvalue())
 
+        if frict_info == "":
+            accum += "No issues reported using the default Frictionless consistency checks."
+
         accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n---\n## Report from LLM\n\n'
         yield accum, accum, "Processing file..."
     else:
         yield '', '', "Only CSV and Excel files are supported."
 
+    yield accum, accum, "Starting LLM processing..."
 
     f_name = os.path.basename(file_path)
     if option == "GPT-4o":
