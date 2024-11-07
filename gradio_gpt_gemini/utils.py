@@ -102,28 +102,6 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
         accum += f"# DOI: {doi_input}\n\n"
 
     accum += f"- Processing file: {file_path}\n\n"
-    # should be able to work with file_path now in Frictionless data
-    if file_path.endswith(('.csv', '.xls', '.xlsx')):
-        yield '', '', "Running Frictionless examination..."
-        profiler = cProfile.Profile()
-        profiler.enable()
-        frict_info = frictionless_util.get_output(file_path)
-        profiler.disable()
-
-        # Print the profiling results
-        result = StringIO()
-        ps = pstats.Stats(profiler, stream=result).sort_stats(pstats.SortKey.CUMULATIVE)
-        ps.print_stats()
-        print(result.getvalue())
-
-        if frict_info == "":
-            frict_info = "No issues reported using the default Frictionless consistency checks."
-
-        accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n---\n## Report from LLM\n\n'
-        yield accum, accum, "Processing file..."
-    else:
-        yield '', '', "Only CSV and Excel files are supported."
-
     yield accum, accum, "Starting LLM processing..."
 
     f_name = os.path.basename(file_path)
@@ -148,6 +126,48 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
         yield (gr.update(visible=False),
                 gr.update(visible=True),
                 'Done')
+
+def submit_for_frictionless(file, option, input_method, select_file, choices, doi_input):
+    if input_method == 'Upload file' and file is None:
+        yield '', "No file was uploaded."
+        return
+    elif input_method == 'Dryad or Zenodo DOI' and select_file == '[Select file after looking up DOI]':
+        yield '', "The doi needs to be looked up and a file selected."
+        return
+
+    if input_method == 'Dryad or Zenodo DOI':
+        yield '', "Downloading file from repository..."
+        file_url = choices.get(select_file)
+        file_path = file_reading_util.download_file(file_url, select_file)
+    else:
+        file_path = file.name
+
+    accum = ''
+    if doi_input:
+        accum += f"# DOI: {doi_input}\n\n"
+
+    accum += f"- Processing file: {file_path}\n\n"
+    # should be able to work with file_path now in Frictionless data
+    if file_path.endswith(('.csv', '.xls', '.xlsx')):
+        yield '', "Running Frictionless examination..."
+        profiler = cProfile.Profile()
+        profiler.enable()
+        frict_info = frictionless_util.get_output(file_path)
+        profiler.disable()
+
+        # Print the profiling results
+        result = StringIO()
+        ps = pstats.Stats(profiler, stream=result).sort_stats(pstats.SortKey.CUMULATIVE)
+        ps.print_stats()
+        print(result.getvalue())
+
+        if frict_info == "":
+            frict_info = "No issues reported using the default Frictionless consistency checks."
+
+        accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n'
+        yield accum, "Done"
+    else:
+        yield '', "Only CSV and Excel files are supported."
 
 def update_inputs(input_method):
     if input_method == "Upload file":

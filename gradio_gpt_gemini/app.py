@@ -95,10 +95,12 @@ def main():
 
                 option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
                 submit_button = gr.Button("Submit to LLM")
+                frictionless_submit = gr.Button("Submit for Frictionless validation")
             with gr.Column(elem_id="right-column", elem_classes="column"):
                 status_output = gr.Textbox(visible=True, label="Status", placeholder="Status messages will appear here")
                 textbox_output = gr.Textbox(visible=False, show_label=False, placeholder="Output will appear here")
                 markdown_output = gr.Markdown(visible=True)
+                frict_md_output = gr.Markdown(visible=True)
 
         input_method.change(fn=utils.update_inputs, inputs=input_method, outputs=[file_input, doi_group])
 
@@ -121,6 +123,11 @@ def main():
             fn=utils.process_file_and_return_markdown,
             inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_file, choices_state, doi_input],
             outputs=[textbox_output, markdown_output, status_output]
+        )
+        frictionless_submit.click(
+            fn=utils.submit_for_frictionless,
+            inputs=[file_input, option_input, input_method, select_file, choices_state, doi_input],
+            outputs=[frict_md_output, status_output]
         )
 
     auth = None
