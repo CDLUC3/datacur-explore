@@ -97,10 +97,10 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
         file_path = file.name
 
     accum = ''
-    if doi_input:
+    if doi_input and input_method == 'Dryad or Zenodo DOI':
         accum += f"# DOI: {doi_input}\n\n"
 
-    accum += f"- Processing file: {file_path}\n\n"
+    accum += f"- Processing file: {os.path.basename(file_path)}\n\n"
     yield accum, accum, "Starting LLM processing..."
 
     f_name = os.path.basename(file_path)
@@ -142,10 +142,10 @@ def submit_for_frictionless(file, option, input_method, select_file, choices, do
         file_path = file.name
 
     accum = ''
-    if doi_input:
+    if doi_input and input_method == 'Dryad or Zenodo DOI':
         accum += f"# DOI: {doi_input}\n\n"
 
-    accum += f"- Processing file: {file_path}\n\n"
+    accum += f"- Processing file: {os.path.basename(file_path)}\n\n"
     # should be able to work with file_path now in Frictionless data
     if file_path.endswith(('.csv', '.xls', '.xlsx')):
         yield '', "Running Frictionless examination..."
