@@ -68,8 +68,7 @@ def load_file_list(doi):
 
     file_list = repo.get_filenames_and_links()
     choices = {key: value for item in file_list for key, value in item.items()}
-    choices['[Select file after looking up DOI]'] = '[Select file after looking up DOI]'
-    return gr.update(choices=list(choices.keys()), value='[Select file after looking up DOI]', visible=True), choices
+    return gr.update(choices=list(choices.keys()), visible=True), choices
 
 
 # this is a bit confusing since we are yielding to outputs that update the gradio interface and there

@@ -76,10 +76,10 @@ def main():
                                                value="10.5281/zenodo.13616727", scale=3)
                         load_doi_button = gr.Button("Lookup DOI", elem_classes="small-button margin-bottom", scale=1)
                     with gr.Row():
-                        select_file = gr.Dropdown(label="Choose file to analyze",
-                                                  value='[Select file after looking up DOI]',
-                                                  choices=[('[Select file after Looking up DOI]', '[Select file after looking up DOI]')],
-                                                  interactive=True)
+                        select_files = gr.CheckboxGroup(label="Choose readme and a data file to analyze",
+                                                       value=['[Select files after looking up DOI]'],
+                                                       choices=['[Select files after looking up DOI]'],
+                                                       interactive=True)
                 with gr.Accordion("Prompting", open=True):
                     system_info_input = gr.TextArea(label="System conditioning", value=default_system_info)
                     user_prompt_input = gr.TextArea(label="User prompt", value=default_user_prompt)
@@ -115,18 +115,18 @@ def main():
 
         # DOI ACTIONS
         choices_state = gr.State()
-        load_doi_button.click(fn=utils.load_file_list, inputs=doi_input, outputs=[select_file, choices_state])
+        load_doi_button.click(fn=utils.load_file_list, inputs=doi_input, outputs=[select_files, choices_state])
 
         # SUBMIT ACTIONS
         # app.py
         submit_button.click(
             fn=utils.process_file_and_return_markdown,
-            inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_file, choices_state, doi_input],
+            inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_files, choices_state, doi_input],
             outputs=[textbox_output, markdown_output, status_output]
         )
         frictionless_submit.click(
             fn=utils.submit_for_frictionless,
-            inputs=[file_input, option_input, input_method, select_file, choices_state, doi_input],
+            inputs=[file_input, option_input, input_method, select_files, choices_state, doi_input],
             outputs=[frict_md_output, status_output]
         )
 
