@@ -80,3 +80,16 @@ def download_file(url, filename=None):
     threading.Timer(180, os.remove, [temp_file_path]).start()
 
     return temp_file_path
+
+def readme_and_data(file_paths):
+    readme_file = None
+    data_file = None
+
+    for file_path in file_paths:
+        temp_fp = file_path.lower()
+        if 'readme' in temp_fp or file_path.endswith('.txt') or file_path.endswith('.md'):
+            readme_file = file_path
+        else:
+            data_file = file_path
+
+    return readme_file, data_file

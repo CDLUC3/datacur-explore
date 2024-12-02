@@ -76,9 +76,7 @@ def main():
                                                value="10.5281/zenodo.13616727", scale=3)
                         load_doi_button = gr.Button("Lookup DOI", elem_classes="small-button margin-bottom", scale=1)
                     with gr.Row():
-                        select_files = gr.CheckboxGroup(label="Choose readme and a data file to analyze",
-                                                       value=['[Select files after looking up DOI]'],
-                                                       choices=['[Select files after looking up DOI]'],
+                        select_files = gr.CheckboxGroup(label="Choose readme and a data file to analyze", choices=[],
                                                        interactive=True)
                 with gr.Accordion("Prompting", open=True):
                     system_info_input = gr.TextArea(label="System conditioning", value=default_system_info)

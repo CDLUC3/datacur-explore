@@ -85,41 +85,44 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
     if input_method == 'Upload file' and file is None:
         yield '', '', "No file was uploaded."
         return
-    elif input_method == 'Dryad or Zenodo DOI' and select_file == '[Select file after looking up DOI]':
-        yield '', '', "The doi needs to be looked up and a file selected."
+    elif input_method == 'Dryad or Zenodo DOI' and (len(select_file) == 0 or len(select_file) > 2):
+        yield '', '', "The doi needs to be looked up and README and data file selected."
         return
 
     if input_method == 'Dryad or Zenodo DOI':
-        yield '', '', "Downloading file from repository..."
-        file_url = choices.get(select_file)
-        file_path = file_reading_util.download_file(file_url, select_file)
+        yield '', '', "Downloading from repository..."
+        # file_urls = [choices.get(file) for file in select_file]
+        # make dict of just the selected files and their urls as values
+        file_urls = {file: choices.get(file) for file in select_file}
+
+        # get paths of downloaded files
+        file_paths = [ file_reading_util.download_file(value, filename=key) for key, value in file_urls.items() ]
     else:
-        file_path = file.name
+        file_paths = [ file.name ]
 
     accum = ''
     if doi_input and input_method == 'Dryad or Zenodo DOI':
         accum += f"# DOI: {doi_input}\n\n"
 
-    accum += f"- Processing file: {os.path.basename(file_path)}\n\n"
+    accum += f"- Processing files\n\n"
     yield accum, accum, "Starting LLM processing..."
 
-    f_name = os.path.basename(file_path)
     if option == "GPT-4o":
-        yield from open_api_code.generate_stream(file_path, system_info, prompt, accum)
+        yield from open_api_code.generate_stream(file_paths, system_info, prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),
                gr.update(visible=True),
                'Done')
     elif option == "Gemini-1.5-flash-001":
-        yield from google_api_code.generate(file_path, system_info, prompt, accum)
+        yield from google_api_code.generate(file_paths, system_info, prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),
                 gr.update(visible=True),
                 'Done')
     elif option == "llama3.1-70b":
-        yield from bedrock_llama.generate_stream(file_path, system_info, prompt, accum)
+        yield from bedrock_llama.generate_stream(file_paths, system_info, prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),
