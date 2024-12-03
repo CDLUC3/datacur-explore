@@ -18,6 +18,13 @@ For OpenAI, you'll need to create an account and get an API key. Put the key in 
 openai_api_key: "sk-proj-yourapikey"
 ```
 
+For AWS and Bedrock running locally you'll need to log in to the AWS console to make use of boto3.
+The configuration is stored in `~/.aws/config`.
+
+```bash
+aws sso login --profile uc3-dev-ops
+```
+
 ## Server manual install -- python
 
 ```bash
