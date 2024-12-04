@@ -16,8 +16,9 @@ def generate(file_paths, system_info, prompt, starting_text=''):
     # https://cloud.google.com/vertex-ai/docs/python-sdk/data-classes
 
     if readme_file is not None:
-        readme_file = f'README FILE\n---\n{readme_file}\n---\n'
-        readme_content = Part.from_data(mime_type="text/plain", data=readme_file.encode('utf-8'))
+        readme_content = file_reading_util.get_csv_content(readme_file)
+        readme_content = f'README FILE\n---\n{readme_content}\n---\n'
+        readme_content = Part.from_data(mime_type="text/plain", data=readme_content.encode('utf-8'))
     data_content = f'DATA FILE\n---\n{data_content}\n---\n'
     data_content = Part.from_data(mime_type="text/csv", data=data_content.encode('utf-8'))
 
