@@ -21,7 +21,23 @@ openai_api_key: "sk-proj-yourapikey"
 For AWS and Bedrock running locally you'll need to log in to the AWS console to make use of boto3.
 The configuration is stored in `~/.aws/config`.
 
+The config file looks something like this:
+
+```ini
+[profile uc3-dev-ops]
+sso_session = uc3
+sso_account_id = 1 # change this to the account id you are using
+sso_role_name = role_name # change this to the role name you are using
+region = us-west-2
+
+[sso-session uc3]
+sso_region = us-west-2
+sso_start_url = https://cdlsso.awsapps.com/start#/
+sso_registration_scopes = sso:account:access
+```
+Run the following commands to log in to the AWS console and allow boto3 access.
 ```bash
+export AWS_PROFILE=uc3-dev-ops
 aws sso login --profile uc3-dev-ops
 ```
 

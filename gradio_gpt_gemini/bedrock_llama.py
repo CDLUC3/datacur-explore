@@ -14,11 +14,13 @@ def generate_stream(file_paths, system_info, prompt, starting_text=''):
     # https://cloud.google.com/vertex-ai/docs/python-sdk/data-classes
 
     if readme_file is not None:
-        readme_file = f'README FILE\n---\n{readme_file}\n---\n'
+        readme_content = file_reading_util.get_csv_content(readme_file)
+        readme_content = f'README FILE\n---\n{readme_content}\n---\n'
+    data_content = f'DATA FILE\n---\n{data_content}\n---\n'
     data_content = f'DATA FILE\n---\n{data_content}\n---\n'
 
     if readme_file is not None:
-        parts = ' '.join([readme_file, data_content])
+        parts = ' '.join([readme_content, data_content])
     else:
         parts = data_content
 
