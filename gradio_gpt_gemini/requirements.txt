@@ -1,6 +1,6 @@
 openai
 ipdb
-gradio
+gradio=4.44.1
 pandas
 markdown
 striprtf

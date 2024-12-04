@@ -92,8 +92,8 @@ def main():
                         save_button = gr.Button("Save Profile", elem_classes="small-button")
 
                 option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
-                submit_button = gr.Button("Submit to LLM")
                 frictionless_submit = gr.Button("Submit for Frictionless validation")
+                submit_button = gr.Button("Submit to LLM")
             with gr.Column(elem_id="right-column", elem_classes="column"):
                 status_output = gr.Textbox(visible=True, label="Status", placeholder="Status messages will appear here")
                 textbox_output = gr.Textbox(visible=False, show_label=False, placeholder="Output will appear here")
