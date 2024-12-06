@@ -82,23 +82,10 @@ def load_file_list(doi):
 
 # The three outputs it has to yield and update are textbox, markdown and status_output (in that order)
 def process_file_and_return_markdown(file, system_info, prompt, option, input_method, select_file, choices, doi_input):
-    if input_method == 'Upload file' and file is None:
-        yield '', '', "No file was uploaded."
+    file_paths, message = file_reading_util.file_setup(input_method, file, select_file, choices)
+    yield '', '', message
+    if len(file_paths) == 0:
         return
-    elif input_method == 'Dryad or Zenodo DOI' and (len(select_file) == 0 or len(select_file) > 2):
-        yield '', '', "The doi needs to be looked up and README and data file selected."
-        return
-
-    if input_method == 'Dryad or Zenodo DOI':
-        yield '', '', "Downloading from repository..."
-        # file_urls = [choices.get(file) for file in select_file]
-        # make dict of just the selected files and their urls as values
-        file_urls = {file: choices.get(file) for file in select_file}
-
-        # get paths of downloaded files
-        file_paths = [ file_reading_util.download_file(value, filename=key) for key, value in file_urls.items() ]
-    else:
-        file_paths = [ file.name ]
 
     accum = ''
     if doi_input and input_method == 'Dryad or Zenodo DOI':
@@ -130,46 +117,40 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
                 'Done')
 
 def submit_for_frictionless(file, option, input_method, select_file, choices, doi_input):
-    if input_method == 'Upload file' and file is None:
-        yield '', "No file was uploaded."
-        return
-    elif input_method == 'Dryad or Zenodo DOI' and select_file == '[Select file after looking up DOI]':
-        yield '', "The doi needs to be looked up and a file selected."
+    file_paths, message = file_reading_util.file_setup(input_method, file, select_file, choices)
+    yield '', '', message
+    if len(file_paths) == 0:
         return
 
-    if input_method == 'Dryad or Zenodo DOI':
-        yield '', "Downloading file from repository..."
-        file_url = choices.get(select_file)
-        file_path = file_reading_util.download_file(file_url, select_file)
-    else:
-        file_path = file.name
+    file_path = file_reading_util.find_file_with_tabular(file_paths)
+
+    if file_path is None:
+        yield '', "Only CSV and Excel files are supported."
+        return
 
     accum = ''
     if doi_input and input_method == 'Dryad or Zenodo DOI':
         accum += f"# DOI: {doi_input}\n\n"
 
     accum += f"- Processing file: {os.path.basename(file_path)}\n\n"
-    # should be able to work with file_path now in Frictionless data
-    if file_path.endswith(('.csv', '.xls', '.xlsx')):
-        yield '', "Running Frictionless examination..."
-        profiler = cProfile.Profile()
-        profiler.enable()
-        frict_info = frictionless_util.get_output(file_path)
-        profiler.disable()
 
-        # Print the profiling results
-        result = StringIO()
-        ps = pstats.Stats(profiler, stream=result).sort_stats(pstats.SortKey.CUMULATIVE)
-        ps.print_stats()
-        print(result.getvalue())
+    yield '', "Running Frictionless examination..."
+    profiler = cProfile.Profile()
+    profiler.enable()
+    frict_info = frictionless_util.get_output(file_path)
+    profiler.disable()
 
-        if frict_info == "":
-            frict_info = "No issues reported using the default Frictionless consistency checks."
+    # Print the profiling results
+    result = StringIO()
+    ps = pstats.Stats(profiler, stream=result).sort_stats(pstats.SortKey.CUMULATIVE)
+    ps.print_stats()
+    print(result.getvalue())
 
-        accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n'
-        yield accum, "Done"
-    else:
-        yield '', "Only CSV and Excel files are supported."
+    if frict_info == "":
+        frict_info = "No issues reported using the default Frictionless consistency checks."
+
+    accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n'
+    yield accum, "Done"
 
 def update_inputs(input_method):
     if input_method == "Upload file":
