@@ -90,7 +90,7 @@ def main():
                     with gr.Row(elem_classes="bottom-align"):
                         save_profile_name_input = gr.Textbox(label="Profile name to save")
                         save_button = gr.Button("Save Profile", elem_classes="small-button")
-
+                include_frictionless = gr.Checkbox(label="Validate w/ Frictionless and send to LLM", value=False)
                 option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
                 frictionless_submit = gr.Button("Submit for Frictionless validation")
                 submit_button = gr.Button("Submit to LLM")
@@ -119,12 +119,13 @@ def main():
         # app.py
         submit_button.click(
             fn=utils.process_file_and_return_markdown,
-            inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_files, choices_state, doi_input],
+            inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_files,
+                    choices_state, doi_input, include_frictionless],
             outputs=[textbox_output, markdown_output, status_output]
         )
         frictionless_submit.click(
             fn=utils.submit_for_frictionless,
-            inputs=[file_input, option_input, input_method, select_files, choices_state, doi_input],
+            inputs=[file_input, option_input, input_method, select_files, choices_state, doi_input, frictionless_submit],
             outputs=[frict_md_output, status_output]
         )
 
