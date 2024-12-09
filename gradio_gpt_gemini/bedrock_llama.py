@@ -6,8 +6,23 @@ import json
 from botocore.exceptions import ClientError
 import textwrap
 
-def generate_stream(from_file, system_info, prompt, starting_text=''):
-    csv_content = file_reading_util.get_csv_content(from_file)
+def generate_stream(file_paths, system_info, prompt, starting_text=''):
+    readme_file, data_file = file_reading_util.readme_and_data(file_paths)
+    data_content = file_reading_util.get_csv_content(data_file)
+
+    # for larger files and using their special storage, this URL seems to document how to do it
+    # https://cloud.google.com/vertex-ai/docs/python-sdk/data-classes
+
+    if readme_file is not None:
+        readme_content = file_reading_util.get_csv_content(readme_file)
+        readme_content = f'README FILE\n---\n{readme_content}\n---\n'
+    data_content = f'DATA FILE\n---\n{data_content}\n---\n'
+    data_content = f'DATA FILE\n---\n{data_content}\n---\n'
+
+    if readme_file is not None:
+        parts = ' '.join([readme_content, data_content])
+    else:
+        parts = data_content
 
     session = boto3.Session()
     client = session.client("bedrock-runtime", region_name="us-west-2")
@@ -45,7 +60,7 @@ def generate_stream(from_file, system_info, prompt, starting_text=''):
     # To add additional history, you need to include the previous user and assistant turns and then ending with assistant
     # like below as the last message.
 
-    full_text_prompt = prompt + '\n\n' + csv_content
+    full_text_prompt = prompt + '\n\n' + parts
     formatted_prompt = textwrap.dedent(f"""
         <|begin_of_text|>
         <|start_header_id|>system<|end_header_id|>

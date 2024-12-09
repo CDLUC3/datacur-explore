@@ -68,8 +68,7 @@ def load_file_list(doi):
 
     file_list = repo.get_filenames_and_links()
     choices = {key: value for item in file_list for key, value in item.items()}
-    choices['[Select file after looking up DOI]'] = '[Select file after looking up DOI]'
-    return gr.update(choices=list(choices.keys()), value='[Select file after looking up DOI]', visible=True), choices
+    return gr.update(choices=list(choices.keys()), visible=True), choices
 
 
 # this is a bit confusing since we are yielding to outputs that update the gradio interface and there
@@ -83,44 +82,34 @@ def load_file_list(doi):
 
 # The three outputs it has to yield and update are textbox, markdown and status_output (in that order)
 def process_file_and_return_markdown(file, system_info, prompt, option, input_method, select_file, choices, doi_input):
-    if input_method == 'Upload file' and file is None:
-        yield '', '', "No file was uploaded."
+    file_paths, message = file_reading_util.file_setup(input_method, file, select_file, choices)
+    yield '', '', message
+    if len(file_paths) == 0:
         return
-    elif input_method == 'Dryad or Zenodo DOI' and select_file == '[Select file after looking up DOI]':
-        yield '', '', "The doi needs to be looked up and a file selected."
-        return
-
-    if input_method == 'Dryad or Zenodo DOI':
-        yield '', '', "Downloading file from repository..."
-        file_url = choices.get(select_file)
-        file_path = file_reading_util.download_file(file_url, select_file)
-    else:
-        file_path = file.name
 
     accum = ''
     if doi_input and input_method == 'Dryad or Zenodo DOI':
         accum += f"# DOI: {doi_input}\n\n"
 
-    accum += f"- Processing file: {os.path.basename(file_path)}\n\n"
+    accum += f"- Processing files\n\n"
     yield accum, accum, "Starting LLM processing..."
 
-    f_name = os.path.basename(file_path)
     if option == "GPT-4o":
-        yield from open_api_code.generate_stream(file_path, system_info, prompt, accum)
+        yield from open_api_code.generate_stream(file_paths, system_info, prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),
                gr.update(visible=True),
                'Done')
     elif option == "Gemini-1.5-flash-001":
-        yield from google_api_code.generate(file_path, system_info, prompt, accum)
+        yield from google_api_code.generate(file_paths, system_info, prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),
                 gr.update(visible=True),
                 'Done')
     elif option == "llama3.1-70b":
-        yield from bedrock_llama.generate_stream(file_path, system_info, prompt, accum)
+        yield from bedrock_llama.generate_stream(file_paths, system_info, prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),
@@ -128,46 +117,40 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
                 'Done')
 
 def submit_for_frictionless(file, option, input_method, select_file, choices, doi_input):
-    if input_method == 'Upload file' and file is None:
-        yield '', "No file was uploaded."
-        return
-    elif input_method == 'Dryad or Zenodo DOI' and select_file == '[Select file after looking up DOI]':
-        yield '', "The doi needs to be looked up and a file selected."
+    file_paths, message = file_reading_util.file_setup(input_method, file, select_file, choices)
+    yield '', '', message
+    if len(file_paths) == 0:
         return
 
-    if input_method == 'Dryad or Zenodo DOI':
-        yield '', "Downloading file from repository..."
-        file_url = choices.get(select_file)
-        file_path = file_reading_util.download_file(file_url, select_file)
-    else:
-        file_path = file.name
+    file_path = file_reading_util.find_file_with_tabular(file_paths)
+
+    if file_path is None:
+        yield '', "Only CSV and Excel files are supported."
+        return
 
     accum = ''
     if doi_input and input_method == 'Dryad or Zenodo DOI':
         accum += f"# DOI: {doi_input}\n\n"
 
     accum += f"- Processing file: {os.path.basename(file_path)}\n\n"
-    # should be able to work with file_path now in Frictionless data
-    if file_path.endswith(('.csv', '.xls', '.xlsx')):
-        yield '', "Running Frictionless examination..."
-        profiler = cProfile.Profile()
-        profiler.enable()
-        frict_info = frictionless_util.get_output(file_path)
-        profiler.disable()
 
-        # Print the profiling results
-        result = StringIO()
-        ps = pstats.Stats(profiler, stream=result).sort_stats(pstats.SortKey.CUMULATIVE)
-        ps.print_stats()
-        print(result.getvalue())
+    yield '', "Running Frictionless examination..."
+    profiler = cProfile.Profile()
+    profiler.enable()
+    frict_info = frictionless_util.get_output(file_path)
+    profiler.disable()
 
-        if frict_info == "":
-            frict_info = "No issues reported using the default Frictionless consistency checks."
+    # Print the profiling results
+    result = StringIO()
+    ps = pstats.Stats(profiler, stream=result).sort_stats(pstats.SortKey.CUMULATIVE)
+    ps.print_stats()
+    print(result.getvalue())
 
-        accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n'
-        yield accum, "Done"
-    else:
-        yield '', "Only CSV and Excel files are supported."
+    if frict_info == "":
+        frict_info = "No issues reported using the default Frictionless consistency checks."
+
+    accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n'
+    yield accum, "Done"
 
 def update_inputs(input_method):
     if input_method == "Upload file":

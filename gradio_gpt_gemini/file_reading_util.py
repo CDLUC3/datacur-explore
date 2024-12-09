@@ -11,6 +11,23 @@ import threading
 import time
 
 
+# preliminaries for working with file input
+def file_setup(input_method, file, select_file, choices):
+    if input_method == 'Upload file' and file is None:
+        return [], "No file was uploaded."
+    elif input_method == 'Dryad or Zenodo DOI' and (len(select_file) == 0 or len(select_file) > 2):
+        return [], "The doi needs to be looked up and README and data file selected."
+
+    if input_method == 'Dryad or Zenodo DOI':
+        # make dict of just the selected files and their urls as values
+        file_urls = {file: choices.get(file) for file in select_file}
+
+        # get paths of downloaded files
+        file_paths = [ download_file(value, filename=key) for key, value in file_urls.items() ]
+    else:
+        file_paths = [ file.name ]
+    return file_paths, 'Got files'
+
 def convert_rtf_to_text(rtf_file_path):
     with open(rtf_file_path, 'r') as file:
         rtf_content = file.read()
@@ -80,3 +97,22 @@ def download_file(url, filename=None):
     threading.Timer(180, os.remove, [temp_file_path]).start()
 
     return temp_file_path
+
+def readme_and_data(file_paths):
+    readme_file = None
+    data_file = None
+
+    for file_path in file_paths:
+        temp_fp = file_path.lower()
+        if 'readme' in temp_fp or file_path.endswith('.txt') or file_path.endswith('.md'):
+            readme_file = file_path
+        else:
+            data_file = file_path
+
+    return readme_file, data_file
+
+def find_file_with_tabular(file_list):
+    for file_path in file_list:
+        if file_path.endswith(('.csv', '.xls', '.xlsx')):
+            return file_path
+    return None

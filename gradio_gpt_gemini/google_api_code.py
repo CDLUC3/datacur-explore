@@ -8,13 +8,25 @@ import mimetypes
 import file_reading_util
 
 
-def generate(from_file, system_info, prompt, starting_text=''):
-    file_content = file_reading_util.get_csv_content(from_file)
+def generate(file_paths, system_info, prompt, starting_text=''):
+    readme_file, data_file = file_reading_util.readme_and_data(file_paths)
+    data_content = file_reading_util.get_csv_content(data_file)
 
     # for larger files and using their special storage, this URL seems to document how to do it
     # https://cloud.google.com/vertex-ai/docs/python-sdk/data-classes
 
-    document1 = Part.from_data(mime_type="text/csv", data=file_content.encode('utf-8'))
+    if readme_file is not None:
+        readme_content = file_reading_util.get_csv_content(readme_file)
+        readme_content = f'README FILE\n---\n{readme_content}\n---\n'
+        readme_content = Part.from_data(mime_type="text/plain", data=readme_content.encode('utf-8'))
+    data_content = f'DATA FILE\n---\n{data_content}\n---\n'
+    data_content = Part.from_data(mime_type="text/csv", data=data_content.encode('utf-8'))
+
+    if readme_file is not None:
+        parts = [readme_content, data_content, prompt]
+    else:
+        parts = [data_content, prompt]
+
 
     vertexai.init(project=config.get('google_project'), location=config.get('google_location'))
 
@@ -38,7 +50,7 @@ def generate(from_file, system_info, prompt, starting_text=''):
     )
 
     responses = model.generate_content(
-        [document1, prompt],
+        parts,
         generation_config=generation_config,
         safety_settings=safety_settings,
         stream=True,
