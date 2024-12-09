@@ -13,7 +13,7 @@ import gradio as gr
 
 # Check https://github.com/openai/openai-python for the latest version of the OpenAI Python library.
 
-def generate_stream(file_paths, system_info, prompt, starting_text=''):
+def generate_stream(file_paths, system_info, prompt, starting_text='', frict_info=''):
     readme_file, data_file = file_reading_util.readme_and_data(file_paths)
     data_content = file_reading_util.get_csv_content(data_file)
 
@@ -23,12 +23,12 @@ def generate_stream(file_paths, system_info, prompt, starting_text=''):
     if readme_file is not None:
         readme_content = file_reading_util.get_csv_content(readme_file)
         readme_content = f'README FILE\n---\n{readme_content}\n---\n'
+    if frict_info:
+        frict_info = f'Report from Frictionless data validation\n---\n{frict_info}\n---\n'
     data_content = f'DATA FILE\n---\n{data_content}\n---\n'
 
-    if readme_file is not None:
-        parts = ' '.join([readme_content, data_content])
-    else:
-        parts = data_content
+    # just keep and join non-empty or non None items
+    parts = ' '.join([item for item in [readme_content, data_content, frict_info] if item])
 
     client = openai.OpenAI(api_key=config.get('openai_api_key'))
 
