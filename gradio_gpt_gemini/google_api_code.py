@@ -8,7 +8,7 @@ import mimetypes
 import file_reading_util
 
 
-def generate(file_paths, system_info, prompt, starting_text=''):
+def generate(file_paths, system_info, prompt, starting_text='', frict_info=''):
     readme_file, data_file = file_reading_util.readme_and_data(file_paths)
     data_content = file_reading_util.get_csv_content(data_file)
 
@@ -19,14 +19,12 @@ def generate(file_paths, system_info, prompt, starting_text=''):
         readme_content = file_reading_util.get_csv_content(readme_file)
         readme_content = f'README FILE\n---\n{readme_content}\n---\n'
         readme_content = Part.from_data(mime_type="text/plain", data=readme_content.encode('utf-8'))
+    if frict_info:
+        frict_info = f'Report from Frictionless data validation\n---\n{frict_info}\n---\n'
     data_content = f'DATA FILE\n---\n{data_content}\n---\n'
     data_content = Part.from_data(mime_type="text/csv", data=data_content.encode('utf-8'))
 
-    if readme_file is not None:
-        parts = [readme_content, data_content, prompt]
-    else:
-        parts = [data_content, prompt]
-
+    parts = [item for item in [readme_content, data_content, frict_info, prompt] if item]
 
     vertexai.init(project=config.get('google_project'), location=config.get('google_location'))
 
