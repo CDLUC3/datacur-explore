@@ -20,6 +20,8 @@ def generate_stream(file_paths, system_info, prompt, starting_text='', frict_inf
     # for larger files and using their special storage, this URL seems to document how to do it
     # https://cloud.google.com/vertex-ai/docs/python-sdk/data-classes
 
+    readme_content = None
+
     if readme_file is not None:
         readme_content = file_reading_util.get_csv_content(readme_file)
         readme_content = f'README FILE\n---\n{readme_content}\n---\n'

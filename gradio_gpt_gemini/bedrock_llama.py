@@ -10,6 +10,7 @@ def generate_stream(file_paths, system_info, prompt, starting_text='', frict_inf
     readme_file, data_file = file_reading_util.readme_and_data(file_paths)
     data_content = file_reading_util.get_csv_content(data_file)
 
+    readme_content = None
     # for larger files and using their special storage, this URL seems to document how to do it
     # https://cloud.google.com/vertex-ai/docs/python-sdk/data-classes
     if readme_file is not None:
