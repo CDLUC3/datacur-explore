@@ -125,7 +125,7 @@ def main():
         )
         frictionless_submit.click(
             fn=utils.submit_for_frictionless,
-            inputs=[file_input, option_input, input_method, select_files, choices_state, doi_input, frictionless_submit],
+            inputs=[file_input, option_input, input_method, select_files, choices_state, doi_input],
             outputs=[frict_md_output, status_output]
         )
 

@@ -128,6 +128,7 @@ def submit_for_frictionless(file, option, input_method, select_file, choices, do
     file_paths, message = file_reading_util.file_setup(input_method, file, select_file, choices)
     yield '', '', message
     if len(file_paths) == 0:
+        yield '', 'Some files must be chosen'
         return
 
     file_path = file_reading_util.find_file_with_tabular(file_paths)
