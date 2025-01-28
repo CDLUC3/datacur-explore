@@ -1,6 +1,4 @@
-boto3==1.18.65
 boto3==1.36.8
-botocore==1.21.65
 botocore==1.36.8
 frictionless==5.18.0
 google_cloud_aiplatform==1.71.1
