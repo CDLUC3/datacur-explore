@@ -103,7 +103,14 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
     yield accum, accum, "Starting LLM processing..."
 
     if option == "GPT-4o":
-        yield from open_api_code.generate_stream(file_paths, system_info, prompt, accum, frict_info)
+        yield from open_api_code.generate_stream(file_paths, system_info, prompt, accum, frict_info, 'gpt-4o')
+
+        # note that return doesn't work right for final value. you need to yield it instead
+        yield (gr.update(visible=False),
+               gr.update(visible=True),
+               'Done')
+    elif option == "o3-mini":
+        yield from open_api_code.generate_stream(file_paths, system_info, prompt, accum, frict_info, 'o3-mini')
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),

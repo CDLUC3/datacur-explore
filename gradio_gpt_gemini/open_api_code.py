@@ -13,7 +13,7 @@ import gradio as gr
 
 # Check https://github.com/openai/openai-python for the latest version of the OpenAI Python library.
 
-def generate_stream(file_paths, system_info, prompt, starting_text='', frict_info=''):
+def generate_stream(file_paths, system_info, prompt, starting_text='', frict_info='', model='gpt-40'):
     readme_file, data_file = file_reading_util.readme_and_data(file_paths)
     data_content = file_reading_util.get_csv_content(data_file)
 
@@ -35,7 +35,7 @@ def generate_stream(file_paths, system_info, prompt, starting_text='', frict_inf
     client = openai.OpenAI(api_key=config.get('openai_api_key'))
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model=model,
         messages=[
             {"role": "system", "content": system_info},
             {"role": "user", "content": prompt + '\n\n' + parts}
