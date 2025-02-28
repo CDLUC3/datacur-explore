@@ -69,34 +69,42 @@ def save_profile_action(profile_name, system_info, user_prompt):
 # The three outputs it has to yield and update are textbox, markdown and status_output (in that order)
 def process_file_and_return_markdown(file_chooser, system_info, user_prompt, llm_option,
                                      input_method, doi_input):
-    file_paths, message = file_reading_util.file_setup(input_method, file_chooser)
-    yield '', '', message
-    if len(file_paths) == 0:
+
+
+    file_paths = yield from file_reading_util.download_files(file_chooser, input_method, doi_input)
+
+    # file_paths = file_reading_util.file_setup(input_method, file_chooser)
+    if isinstance(file_paths, str):  # if it returns a string, it's an error message
+        yield '', '', file_paths
         return
 
     accum = ''
     if doi_input and input_method == 'Dryad or Zenodo DOI':
         accum += f"# DOI: {doi_input}\n\n"
 
-    accum += f"- Processing files\n\n"
+    file_context = ''
+    for file_path in file_paths:
+        file_content = file_reading_util.get_texty_content(file_path)
+        file_context += f"## Filename: {os.path.basename(file_path)}\n\n{file_content}\n\n"
+
     yield accum, accum, "Starting LLM processing..."
 
     if llm_option == "GPT-4o":
-        yield from open_api_code.generate_stream(file_paths, system_info, user_prompt, accum, frict_info)
+        yield from open_api_code.generate_stream(file_context, system_info, user_prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),
                gr.update(visible=True),
                'Done')
     elif llm_option == "Gemini-1.5-flash-001":
-        yield from google_api_code.generate(file_paths, system_info, user_prompt, accum, frict_info)
+        yield from google_api_code.generate(file_context, system_info, user_prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),
                 gr.update(visible=True),
                 'Done')
     elif llm_option == "llama3.1-70b":
-        yield from bedrock_llama.generate_stream(file_paths, system_info, user_prompt, accum, frict_info)
+        yield from bedrock_llama.generate_stream(file_context, system_info, user_prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
         yield (gr.update(visible=False),

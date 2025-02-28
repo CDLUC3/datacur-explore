@@ -1,5 +1,6 @@
 import pdb
 
+import repo_factory
 import pandas as pd
 import codecs
 from striprtf.striprtf import rtf_to_text
@@ -9,6 +10,48 @@ import requests
 import os
 import threading
 import time
+
+
+# yield to this to give updates progress while downloading
+def download_files(file_chooser, input_method, doi_input):
+    if input_method == 'Upload file':
+        # get the file paths
+        file_paths = [file.name for file in file_chooser]
+        for path in file_paths:
+            yield '', '', os.path.basename(path)
+            time.sleep(1)
+    else:
+        file_list = load_file_list(doi_input)
+        if isinstance(file_list, str):  # error message rather than a list
+            yield '', '', file_list
+        else:  # download the files
+            fns = []
+            for file_info in file_list:
+                fn = next(iter(file_info))
+                the_url = file_info[fn]
+                yield '', '', f"Downloading {fn}"
+                file_path = download_file(the_url, fn)
+                fns.append(file_path)
+    return fns
+
+
+# get the list of files for a Dryad or Zenodo DOI, they are formatted as a list of dicts
+# with the filename as the key and the download URL as the value
+def load_file_list(doi):
+    if doi:
+        doi = doi.strip()
+    try:
+        repo = repo_factory.repo_factory(doi)
+    except ValueError as e:
+        err = f"Error loading DOI: {e}"
+        return err
+
+    if not repo.id_exists():
+        err = f"DOI {doi} not found."
+        return err
+
+    file_list = repo.get_filenames_and_links()
+    return file_list
 
 
 # preliminaries for working with file input
@@ -47,19 +90,19 @@ def read_first_of_file(file_path):
         return content.decode('iso-8859-1')
 
 
-def get_csv_content(from_file):
+def get_texty_content(from_file):
     if from_file.endswith('.xlsx') or from_file.endswith('.xls'):
         df = pd.read_excel(from_file)
-        csv_content = df.to_string()[0:10000]
+        texty_content = df.to_string()[0:10000]
     elif from_file.endswith('.tsv'):
         df = pd.read_csv(from_file, sep='\t')
-        csv_content = df.to_string()[0:10000]
+        texty_content = df.to_string()[0:10000]
     elif from_file.endswith('.rtf'):
-        csv_content = convert_rtf_to_text(from_file)[0:10000]
+        texty_content = convert_rtf_to_text(from_file)[0:10000]
     else:
-        csv_content = read_first_of_file(from_file)[0:10000]
+        texty_content = read_first_of_file(from_file)[0:10000]
 
-    return csv_content
+    return texty_content
 
 
 def download_file(url, filename=None):
