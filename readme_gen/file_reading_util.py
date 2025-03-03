@@ -98,9 +98,9 @@ def get_texty_content(from_file):
         df = pd.read_csv(from_file, sep='\t')
         texty_content = df.to_string()[0:10000]
     elif from_file.endswith('.rtf'):
-        texty_content = convert_rtf_to_text(from_file)[0:10000]
+        texty_content = convert_rtf_to_text(from_file)[0:5000]
     else:
-        texty_content = read_first_of_file(from_file)[0:10000]
+        texty_content = read_first_of_file(from_file)[0:5000]
 
     return texty_content
 
