@@ -1,0 +1,14 @@
+openai
+ipdb
+gradio==4.44.1
+pandas
+markdown
+striprtf
+openpyxl
+vertexai
+striprtf
+google
+pyyaml
+requests
+boto3
+frictionless
