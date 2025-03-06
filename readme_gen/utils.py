@@ -111,6 +111,10 @@ def process_file_and_return_markdown(file_chooser, system_info, user_prompt, llm
                 gr.update(visible=True),
                 'Done')
 
+    # remove the uploaded files
+    for file_path in file_paths:
+        os.remove(file_path)
+
 def update_inputs(input_method):
     if input_method == "Upload file":
         return gr.update(visible=True), gr.update(visible=False)

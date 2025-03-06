@@ -161,6 +161,10 @@ def submit_for_frictionless(file, option, input_method, select_file, choices, do
     accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n'
     yield accum, "Done"
 
+    # remove the uploaded files
+    for file_path in file_paths:
+        os.remove(file_path)
+
 def update_inputs(input_method):
     if input_method == "Upload file":
         return gr.update(visible=True), gr.update(visible=False)
