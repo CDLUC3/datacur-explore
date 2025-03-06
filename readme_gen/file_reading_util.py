@@ -106,7 +106,7 @@ def get_texty_content(from_file):
 
 
 def download_file(url, filename=None):
-    max_size = 300 * 1024 * 1024  # 300MB in bytes
+    max_size = 3 * 1024 * 1024  # 3MB in bytes
     chunk_size = 1024  # 1KB
 
     directory = 'dl_files'
