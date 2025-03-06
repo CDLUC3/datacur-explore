@@ -16,10 +16,7 @@ import time
 def download_files(file_chooser, input_method, doi_input):
     if input_method == 'Upload file':
         # get the file paths
-        file_paths = [file.name for file in file_chooser]
-        for path in file_paths:
-            yield '', '', os.path.basename(path)
-            time.sleep(1)
+        fns = [file.name for file in file_chooser]
     else:
         file_list = load_file_list(doi_input)
         if isinstance(file_list, str):  # error message rather than a list
