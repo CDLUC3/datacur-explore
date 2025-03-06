@@ -58,13 +58,12 @@ def main():
             default_system_info = data.get('system_info', default_system_info)
             default_user_prompt = data.get('user_prompt', default_user_prompt)
 
-    options = ["GPT-4o", "Gemini-1.5-flash-001", "llama3.1-70b"]
     profiles = utils.list_profiles()
 
     # Create the Gradio interface with additional text inputs
     with gr.Blocks(css=css_content) as iface:
         with gr.Row():
-            gr.Markdown("# Basic data quality analysis with LLMs")
+            gr.Markdown("# Multi stage readme analysis")
         with gr.Row():
             with gr.Column():
                 input_method = gr.Radio(label="Choose an input method", choices=["Upload file", "Dryad or Zenodo DOI"],
@@ -90,15 +89,11 @@ def main():
                     with gr.Row(elem_classes="bottom-align"):
                         save_profile_name_input = gr.Textbox(label="Profile name to save")
                         save_button = gr.Button("Save Profile", elem_classes="small-button")
-                include_frictionless = gr.Checkbox(label="Validate w/ Frictionless and send to LLM", value=False)
-                option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
-                frictionless_submit = gr.Button("Submit for Frictionless validation")
                 submit_button = gr.Button("Submit to LLM")
             with gr.Column(elem_id="right-column", elem_classes="column"):
                 status_output = gr.Textbox(visible=True, label="Status", placeholder="Status messages will appear here")
                 textbox_output = gr.Textbox(visible=False, show_label=False, placeholder="Output will appear here")
                 markdown_output = gr.Markdown(visible=True)
-                frict_md_output = gr.Markdown(visible=True)
 
         input_method.change(fn=utils.update_inputs, inputs=input_method, outputs=[file_input, doi_group])
 
@@ -119,14 +114,9 @@ def main():
         # app.py
         submit_button.click(
             fn=utils.process_file_and_return_markdown,
-            inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_files,
-                    choices_state, doi_input, include_frictionless],
+            inputs=[file_input, system_info_input, user_prompt_input, input_method, select_files,
+                    choices_state, doi_input],
             outputs=[textbox_output, markdown_output, status_output]
-        )
-        frictionless_submit.click(
-            fn=utils.submit_for_frictionless,
-            inputs=[file_input, option_input, input_method, select_files, choices_state, doi_input],
-            outputs=[frict_md_output, status_output]
         )
 
     auth = None

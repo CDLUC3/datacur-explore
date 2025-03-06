@@ -93,10 +93,10 @@ def read_first_of_file(file_path):
 def get_texty_content(from_file):
     if from_file.endswith('.xlsx') or from_file.endswith('.xls'):
         df = pd.read_excel(from_file)
-        texty_content = df.to_string()[0:10000]
+        texty_content = df.to_string()[0:5000]
     elif from_file.endswith('.tsv'):
         df = pd.read_csv(from_file, sep='\t')
-        texty_content = df.to_string()[0:10000]
+        texty_content = df.to_string()[0:5000]
     elif from_file.endswith('.rtf'):
         texty_content = convert_rtf_to_text(from_file)[0:5000]
     else:

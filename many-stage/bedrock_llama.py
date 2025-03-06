@@ -6,22 +6,7 @@ import json
 from botocore.exceptions import ClientError
 import textwrap
 
-def generate_stream(file_paths, system_info, prompt, starting_text='', frict_info=''):
-    readme_file, data_file = file_reading_util.readme_and_data(file_paths)
-    data_content = file_reading_util.get_csv_content(data_file)
-
-    readme_content = None
-    # for larger files and using their special storage, this URL seems to document how to do it
-    # https://cloud.google.com/vertex-ai/docs/python-sdk/data-classes
-    if readme_file is not None:
-        readme_content = file_reading_util.get_csv_content(readme_file)
-        readme_content = f'README FILE\n---\n{readme_content}\n---\n'
-    if frict_info:
-        frict_info = f'Report from Frictionless data validation\n---\n{frict_info}\n---\n'
-    data_content = f'DATA FILE\n---\n{data_content}\n---\n'
-
-    # just keep and join non-empty or non None items
-    parts = ' '.join([item for item in [readme_content, data_content, frict_info] if item])
+def generate_stream(file_context, system_info, prompt, starting_text=''):
 
     session = boto3.Session()
     client = session.client("bedrock-runtime", region_name="us-west-2")
@@ -59,7 +44,7 @@ def generate_stream(file_paths, system_info, prompt, starting_text='', frict_inf
     # To add additional history, you need to include the previous user and assistant turns and then ending with assistant
     # like below as the last message.
 
-    full_text_prompt = prompt + '\n\n' + parts
+    full_text_prompt = prompt + '\n\n' + file_context
     formatted_prompt = textwrap.dedent(f"""
         <|begin_of_text|>
         <|start_header_id|>system<|end_header_id|>
