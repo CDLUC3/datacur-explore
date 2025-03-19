@@ -36,3 +36,33 @@ If you want to switch from using one to another
 - *stop* the current server, if any
 - *start* the new server
 - go to the new server's URL in a browser to see the new interface (must be on the VPN and refresh page)
+
+## Updating the libraries
+
+The lightest weight way to handle locked dependencies right now is with `pip-tools`
+which uses `requirements.in` as a list of dependencies and then writes `requirements.txt` 
+as the locked version of libraries.  To install pip tools: `pip install pip-tools`.
+
+We probably need more than just pip alone since for dependabot to function fully, it
+needs to see the full set of dependencies and versions someplace and pip-tools will
+do this without a lot of extra overhead.  In the future we may go towards a more
+robust solution.
+
+To create the locked version of the libraries:
+
+```
+pip-compile requirements.in  # creates requirements.txt
+```
+
+And to upgrade
+
+```
+pip-compile requirements.in --upgrade  # updates requirements.txt
+```
+
+To install the dependencies:
+
+```
+pip-sync requirements.txt
+```
+
