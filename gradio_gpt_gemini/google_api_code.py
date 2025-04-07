@@ -44,7 +44,7 @@ def generate(file_paths, system_info, prompt, starting_text='', frict_info=''):
     }
 
     model = GenerativeModel(
-        "gemini-1.5-flash-001",
+        "gemini-2.0-flash",
         system_instruction=[system_info]
     )
 
