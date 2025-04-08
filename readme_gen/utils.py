@@ -96,7 +96,7 @@ def process_file_and_return_markdown(file_chooser, system_info, user_prompt, llm
         yield (gr.update(visible=False),
                gr.update(visible=True),
                'Done')
-    elif llm_option == "Gemini-1.5-flash-001":
+    elif llm_option == "gemini-2.0-flash":
         yield from google_api_code.generate(file_context, system_info, user_prompt, accum)
 
         # note that return doesn't work right for final value. you need to yield it instead
