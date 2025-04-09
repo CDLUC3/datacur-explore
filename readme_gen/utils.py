@@ -5,16 +5,17 @@ from itertools import accumulate
 
 import repo_factory
 import file_reading_util
-import open_api_code
-import google_api_code
 import time
 import gradio as gr
 import pdb
-import bedrock_llama
 import frictionless_util
 import cProfile
 import pstats
 from io import StringIO
+
+import importlib.util
+import sys
+from pathlib import Path
 
 
 # the following is to enable refactoring and testing before combining three applications into one and have them
@@ -54,6 +55,11 @@ def import_module_from_path(path_str, module_name=None):
     sys.modules[module_name] = module
     spec.loader.exec_module(module)
     return module
+
+# temporary imports for refactoring.  Sometime soon these should be all in one application instead of three
+google_api_code = import_module_from_path('../many-stage/google_api_code.py')
+open_api_code = import_module_from_path('../many-stage/open_api_code.py')
+bedrock_llama = import_module_from_path('../many-stage/bedrock_llama.py')
 
 
 def load_profile(profile_name):
@@ -130,26 +136,19 @@ def process_file_and_return_markdown(file_chooser, system_info, user_prompt, llm
     yield accum, accum, "Starting LLM processing..."
 
     if llm_option == "GPT-4o":
-        yield from open_api_code.generate_stream(file_context, system_info, user_prompt, accum)
+        cgpt_response, accum = yield from open_api_code.generate(file_context, system_info, user_prompt, accum)
+        accum += f"\n\n---\n\n"
+        yield accum, accum, "Done with ChatGPT processing"
 
-        # note that return doesn't work right for final value. you need to yield it instead
-        yield (gr.update(visible=False),
-               gr.update(visible=True),
-               'Done')
     elif llm_option == "gemini-2.0-flash":
-        yield from google_api_code.generate(file_context, system_info, user_prompt, accum)
+        google_response, accum = yield from google_api_code.generate(file_context, system_info, user_prompt, accum)
+        accum += f"\n\n---\n\n"
+        yield accum, accum, "Done with gemini processing"
 
-        # note that return doesn't work right for final value. you need to yield it instead
-        yield (gr.update(visible=False),
-                gr.update(visible=True),
-                'Done')
     elif llm_option == "llama3.1-70b":
-        yield from bedrock_llama.generate_stream(file_context, system_info, user_prompt, accum)
-
-        # note that return doesn't work right for final value. you need to yield it instead
-        yield (gr.update(visible=False),
-                gr.update(visible=True),
-                'Done')
+        llama_response, accum = yield from bedrock_llama.generate(file_content, system_info, user_prompt, accum)
+        accum += f"\n\n---\n\n"
+        yield accum, accum, "Done with Llama processing"
 
     # remove the uploaded files
     for file_path in file_paths:

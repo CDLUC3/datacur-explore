@@ -173,6 +173,10 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
         accum += f"\n\n---\n\n"
         yield accum, accum, "Done with Llama processing"
 
+    # remove the uploaded files
+    for file_path in file_paths:
+        os.remove(file_path)
+
 
 # a standalone function to run Frictionless data validation without other processing
 def submit_for_frictionless(file, option, input_method, select_file, choices, doi_input):
