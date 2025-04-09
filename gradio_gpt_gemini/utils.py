@@ -150,16 +150,9 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
 
     if readme_file is not None:
         readme_content = file_reading_util.get_csv_content(readme_file)
-        # readme_content = f'README FILE\n---\n{readme_content}\n---\n'
         data_content += f'README FILE\n---\n{readme_content}\n---\n'
-        # readme_content = Part.from_data(mime_type="text/plain", data=readme_content.encode('utf-8'))
     if frict_info:
-        # frict_info = f'Report from Frictionless data validation\n---\n{frict_info}\n---\n'
         data_content += f'Report from Frictionless data validation\n---\n{frict_info}\n---\n'
-
-
-    # data_content = Part.from_data(mime_type="text/csv", data=data_content.encode('utf-8'))
-
 
     accum = ''
     if doi_input and input_method == 'Dryad or Zenodo DOI':
@@ -178,11 +171,6 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
 
         accum += f"## Gemini Output\n\n---\n\n"
 
-        # file_context = ""
-        # file_context += f"## Frictionless validation\n\n{frict_info}\n\n"
-        # file_text = file_reading_util.get_texty_content(datafile_path)
-        # file_context += f"## Filename: {os.path.basename(datafile_path)}\n\n{file_text}\n\n"
-
         # call is def generate(file_context, system_info, prompt, starting_text='')
         # file_context is the content or partial content of files as text-y information
         # system info is the system prompt
@@ -196,12 +184,6 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
 
         yield accum, accum, "Done with gemini processing"
 
-        # yield from google_api_code.generate(file_paths, system_info, prompt, accum, frict_info)
-        #
-        # # note that return doesn't work right for final value. you need to yield it instead
-        # yield (gr.update(visible=False),
-        #         gr.update(visible=True),
-        #         'Done')
     elif option == "llama3.1-70b":
         yield from bedrock_llama.generate_stream(file_paths, system_info, prompt, accum, frict_info)
 
@@ -210,6 +192,7 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
                 gr.update(visible=True),
                 'Done')
 
+# a standalone function to run Frictionless data validation without other processing
 def submit_for_frictionless(file, option, input_method, select_file, choices, doi_input):
     file_paths, message = file_reading_util.file_setup(input_method, file, select_file, choices)
     yield '', '', message
