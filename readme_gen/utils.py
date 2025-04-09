@@ -17,6 +17,45 @@ import pstats
 from io import StringIO
 
 
+# the following is to enable refactoring and testing before combining three applications into one and have them
+# share the same code base.
+
+# use the following like this:
+# Import the module
+# mod = import_module_from_path("../other_dir1/other_dir2/library_code.py")
+
+# Use its contents
+# mod.my_function()
+def import_module_from_path(path_str, module_name=None):
+    """
+    Import a Python module from a file path.
+
+    Args:
+        path_str (str or Path): Path to the .py file
+        module_name (str, optional): Name to give the module (defaults to filename)
+
+    Returns:
+        module: The imported module object
+    """
+    path = Path(path_str).resolve()
+    if not path.exists():
+        raise FileNotFoundError(f"No file found at {path}")
+    if not path.suffix == ".py":
+        raise ValueError("Path must point to a .py file")
+
+    if module_name is None:
+        module_name = path.stem  # fallback to the filename (without .py)
+
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load spec for {module_name} from {path}")
+
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def load_profile(profile_name):
     try:
         with open(f"prompt_profiles/{profile_name}.json", 'r') as f:
@@ -25,6 +64,7 @@ def load_profile(profile_name):
     except Exception as e:
         print(f"Error loading profile {profile_name}: {e}")
         return "", ""
+
 
 def delete_profile(profile_name):
     try:

@@ -6,7 +6,7 @@ from itertools import accumulate
 import repo_factory
 import file_reading_util
 import open_api_code
-import google_api_code
+
 import time
 import gradio as gr
 import pdb
@@ -16,6 +16,52 @@ import cProfile
 import pstats
 from io import StringIO
 
+import importlib.util
+import sys
+from pathlib import Path
+
+# from readme_gen.utils import import_module_from_path
+
+# the following is to enable refactoring and testing before combining three applications into one and have them
+# share the same code base.
+
+# use the following like this:
+# Import the module
+# mod = import_module_from_path("../other_dir1/other_dir2/library_code.py")
+
+# Use its contents
+# mod.my_function()
+def import_module_from_path(path_str, module_name=None):
+    """
+    Import a Python module from a file path.
+
+    Args:
+        path_str (str or Path): Path to the .py file
+        module_name (str, optional): Name to give the module (defaults to filename)
+
+    Returns:
+        module: The imported module object
+    """
+    path = Path(path_str).resolve()
+    if not path.exists():
+        raise FileNotFoundError(f"No file found at {path}")
+    if not path.suffix == ".py":
+        raise ValueError("Path must point to a .py file")
+
+    if module_name is None:
+        module_name = path.stem  # fallback to the filename (without .py)
+
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load spec for {module_name} from {path}")
+
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+# temporary imports for refactoring
+google_api_code = import_module_from_path('../many-stage/google_api_code.py')
 
 def load_profile(profile_name):
     try:
@@ -95,12 +141,29 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
         frict_info = frictionless_util.get_output(frict_path)  # this may take a while on large files
 
 
+    # File processing of input files moved out of LLM client functions
+    readme_file, data_file = file_reading_util.readme_and_data(file_paths)
+    data_content = file_reading_util.get_csv_content(data_file)
+    readme_content = ''
+
+    data_content = f'DATA FILE\n---\n{data_content}\n---\n'
+
+    if readme_file is not None:
+        readme_content = file_reading_util.get_csv_content(readme_file)
+        # readme_content = f'README FILE\n---\n{readme_content}\n---\n'
+        data_content += f'README FILE\n---\n{readme_content}\n---\n'
+        # readme_content = Part.from_data(mime_type="text/plain", data=readme_content.encode('utf-8'))
+    if frict_info:
+        # frict_info = f'Report from Frictionless data validation\n---\n{frict_info}\n---\n'
+        data_content += f'Report from Frictionless data validation\n---\n{frict_info}\n---\n'
+
+
+    # data_content = Part.from_data(mime_type="text/csv", data=data_content.encode('utf-8'))
+
+
     accum = ''
     if doi_input and input_method == 'Dryad or Zenodo DOI':
         accum += f"# DOI: {doi_input}\n\n"
-
-    accum += f"- Processing files\n\n"
-    yield accum, accum, "Starting LLM processing..."
 
     if option == "GPT-4o":
         yield from open_api_code.generate_stream(file_paths, system_info, prompt, accum, frict_info)
@@ -110,12 +173,35 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
                gr.update(visible=True),
                'Done')
     elif option == "gemini-2.0-flash":
-        yield from google_api_code.generate(file_paths, system_info, prompt, accum, frict_info)
 
-        # note that return doesn't work right for final value. you need to yield it instead
-        yield (gr.update(visible=False),
-                gr.update(visible=True),
-                'Done')
+        yield accum, accum, "Starting gemini processing..."
+
+        accum += f"## Gemini Output\n\n---\n\n"
+
+        # file_context = ""
+        # file_context += f"## Frictionless validation\n\n{frict_info}\n\n"
+        # file_text = file_reading_util.get_texty_content(datafile_path)
+        # file_context += f"## Filename: {os.path.basename(datafile_path)}\n\n{file_text}\n\n"
+
+        # call is def generate(file_context, system_info, prompt, starting_text='')
+        # file_context is the content or partial content of files as text-y information
+        # system info is the system prompt
+        # prompt is the user prompt
+        # accum is the starting text to prepend to the output and maintain for the generator
+        # google response is passed back separately so it can be isolated from the big dump of info that the
+        # generator function for gradio keeps streaming to the output
+        google_response, accum = yield from google_api_code.generate(data_content, system_info, prompt, accum)
+
+        accum += f"\n\n---\n\n"
+
+        yield accum, accum, "Done with gemini processing"
+
+        # yield from google_api_code.generate(file_paths, system_info, prompt, accum, frict_info)
+        #
+        # # note that return doesn't work right for final value. you need to yield it instead
+        # yield (gr.update(visible=False),
+        #         gr.update(visible=True),
+        #         'Done')
     elif option == "llama3.1-70b":
         yield from bedrock_llama.generate_stream(file_paths, system_info, prompt, accum, frict_info)
 
