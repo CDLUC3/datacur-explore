@@ -6,7 +6,7 @@ import json
 from botocore.exceptions import ClientError
 import textwrap
 
-def generate_stream(file_context, system_info, prompt, starting_text=''):
+def generate(file_context, system_info, prompt, starting_text=''):
 
     session = boto3.Session()
     client = session.client("bedrock-runtime", region_name="us-west-2")
@@ -77,6 +77,7 @@ def generate_stream(file_context, system_info, prompt, starting_text=''):
         # every 30 characters or so, instead of overly frequently
         temp_chunk = ''
         accum = starting_text
+        llama_only_output = ''
 
         # Extract and print the streamed response text in real-time.
         for event in streaming_response["body"]:
@@ -88,14 +89,18 @@ def generate_stream(file_context, system_info, prompt, starting_text=''):
 
                 if len(temp_chunk) > 30:
                     accum += temp_chunk
+                    llama_only_output += temp_chunk
                     temp_chunk = ''
                     yield accum, accum, 'Running Llama generation'
 
         if temp_chunk:
             accum += temp_chunk
+            llama_only_output += temp_chunk
         yield accum, accum, 'Finished Llama generation'
 
+        return llama_only_output, accum
 
     except (ClientError, Exception) as e:
         print(f"ERROR: Can't invoke '{model_id}'. Reason: {e}")
         yield '', '', f"ERROR: Can't invoke '{model_id}'. Reason: {e}"
+        return f"ERROR: Can't invoke '{model_id}'. Reason: {e}", f"ERROR: Can't invoke '{model_id}'. Reason: {e}", 'Error'

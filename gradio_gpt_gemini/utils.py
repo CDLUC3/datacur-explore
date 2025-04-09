@@ -9,7 +9,6 @@ import file_reading_util
 import time
 import gradio as gr
 import pdb
-import bedrock_llama
 import frictionless_util
 import cProfile
 import pstats
@@ -59,9 +58,10 @@ def import_module_from_path(path_str, module_name=None):
     spec.loader.exec_module(module)
     return module
 
-# temporary imports for refactoring
+# temporary imports for refactoring.  Sometime soon these should be all in one application instead of three
 google_api_code = import_module_from_path('../many-stage/google_api_code.py')
 open_api_code = import_module_from_path('../many-stage/open_api_code.py')
+bedrock_llama = import_module_from_path('../many-stage/bedrock_llama.py')
 
 def load_profile(profile_name):
     try:
@@ -159,46 +159,20 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
         accum += f"# DOI: {doi_input}\n\n"
 
     if option == "GPT-4o":
-        # yield from open_api_code.generate_stream(file_paths, system_info, prompt, accum, frict_info)
-
-        # def generate_stream(file_context, system_info, prompt, starting_text=''):
-
-        google_response, accum = yield from open_api_code.generate(data_content, system_info, prompt, accum)
-
+        cgpt_response, accum = yield from open_api_code.generate(data_content, system_info, prompt, accum)
         accum += f"\n\n---\n\n"
-
         yield accum, accum, "Done with ChatGPT processing"
-        # note that return doesn't work right for final value. you need to yield it instead
-        # yield (gr.update(visible=False),
-        #        gr.update(visible=True),
-        #        'Done with GPT generation')
 
     elif option == "gemini-2.0-flash":
-
-        yield accum, accum, "Starting gemini processing..."
-
-        accum += f"## Gemini Output\n\n---\n\n"
-
-        # call is def generate(file_context, system_info, prompt, starting_text='')
-        # file_context is the content or partial content of files as text-y information
-        # system info is the system prompt
-        # prompt is the user prompt
-        # accum is the starting text to prepend to the output and maintain for the generator
-        # google response is passed back separately so it can be isolated from the big dump of info that the
-        # generator function for gradio keeps streaming to the output
         google_response, accum = yield from google_api_code.generate(data_content, system_info, prompt, accum)
-
         accum += f"\n\n---\n\n"
-
         yield accum, accum, "Done with gemini processing"
 
     elif option == "llama3.1-70b":
-        yield from bedrock_llama.generate_stream(file_paths, system_info, prompt, accum, frict_info)
+        llama_response, accum = yield from bedrock_llama.generate(data_content, system_info, prompt, accum)
+        accum += f"\n\n---\n\n"
+        yield accum, accum, "Done with Llama processing"
 
-        # note that return doesn't work right for final value. you need to yield it instead
-        yield (gr.update(visible=False),
-                gr.update(visible=True),
-                'Done')
 
 # a standalone function to run Frictionless data validation without other processing
 def submit_for_frictionless(file, option, input_method, select_file, choices, doi_input):
@@ -264,5 +238,3 @@ def list_profiles():
     except Exception as e:
         print(f"Error listing profiles: {e}")
         return ["[Select profile]"]
-
-
