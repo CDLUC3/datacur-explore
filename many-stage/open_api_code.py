@@ -13,7 +13,7 @@ import gradio as gr
 
 # Check https://github.com/openai/openai-python for the latest version of the OpenAI Python library.
 
-def generate_stream(file_context, system_info, prompt, starting_text='', frict_info=''):
+def generate(file_context, system_info, prompt, starting_text=''):
 
     client = openai.OpenAI(api_key=config.get('openai_api_key'))
 

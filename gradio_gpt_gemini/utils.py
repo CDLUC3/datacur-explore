@@ -5,7 +5,6 @@ from itertools import accumulate
 
 import repo_factory
 import file_reading_util
-import open_api_code
 
 import time
 import gradio as gr
@@ -62,6 +61,7 @@ def import_module_from_path(path_str, module_name=None):
 
 # temporary imports for refactoring
 google_api_code = import_module_from_path('../many-stage/google_api_code.py')
+open_api_code = import_module_from_path('../many-stage/open_api_code.py')
 
 def load_profile(profile_name):
     try:
@@ -159,12 +159,20 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
         accum += f"# DOI: {doi_input}\n\n"
 
     if option == "GPT-4o":
-        yield from open_api_code.generate_stream(file_paths, system_info, prompt, accum, frict_info)
+        # yield from open_api_code.generate_stream(file_paths, system_info, prompt, accum, frict_info)
 
+        # def generate_stream(file_context, system_info, prompt, starting_text=''):
+
+        google_response, accum = yield from open_api_code.generate(data_content, system_info, prompt, accum)
+
+        accum += f"\n\n---\n\n"
+
+        yield accum, accum, "Done with ChatGPT processing"
         # note that return doesn't work right for final value. you need to yield it instead
-        yield (gr.update(visible=False),
-               gr.update(visible=True),
-               'Done')
+        # yield (gr.update(visible=False),
+        #        gr.update(visible=True),
+        #        'Done with GPT generation')
+
     elif option == "gemini-2.0-flash":
 
         yield accum, accum, "Starting gemini processing..."
