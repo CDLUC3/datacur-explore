@@ -142,7 +142,7 @@ def process_file_and_return_markdown(file, system_info, user_prompt, input_metho
     file_context += f"## Gemini output\n\n{google_response}\n\n"
     file_context += f"## Filename: {os.path.basename(datafile_path)}\n\n{file_text}\n\n"
 
-    cgpt_response, accum = yield from open_api_code.generate_stream(file_context, system_info, user_prompt, accum)
+    cgpt_response, accum = yield from open_api_code.generate(file_context, system_info, user_prompt, accum)
 
     accum += f"\n\n---\n\n"
 
