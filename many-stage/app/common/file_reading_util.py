@@ -9,6 +9,7 @@ import requests
 import os
 import threading
 import time
+from app.common.path_utils import get_app_path
 
 
 # preliminaries for working with file input
@@ -83,7 +84,7 @@ def download_file(url, filename=None):
     max_size = 300 * 1024 * 1024  # 300MB in bytes
     chunk_size = 1024  # 1KB
 
-    directory = 'dl_files'
+    directory = get_app_path('dl_files')
 
     # Create a temporary file or use the specified filename
     if filename:

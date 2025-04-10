@@ -1,6 +1,6 @@
 import pdb
-import config
-import file_reading_util
+import app.config
+import app.common.file_reading_util as file_reading_util
 import boto3
 import json
 from botocore.exceptions import ClientError

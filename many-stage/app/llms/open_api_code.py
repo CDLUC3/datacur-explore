@@ -3,9 +3,9 @@ import openai
 import pdb
 import pandas as pd
 import codecs
-import config
+import app.config
 from striprtf.striprtf import rtf_to_text
-import file_reading_util
+import app.common.file_reading_util as file_reading_util
 import logging
 import gradio as gr
 

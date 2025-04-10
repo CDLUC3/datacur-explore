@@ -30,4 +30,3 @@ def make_readable_message(report):
             markdown_message += f"  - {message}\n"
 
     return markdown_message
-

@@ -1,5 +1,5 @@
-from dryad_api import DryadApi
-from zenodo_api import ZenodoApi
+from app.repositories.dryad_api import DryadApi
+from app.repositories.zenodo_api import ZenodoApi
 
 
 # import repo_factory

@@ -3,23 +3,27 @@ import os
 import json
 from itertools import accumulate
 
-import repo_factory
-import file_reading_util
-import open_api_code
-import google_api_code
+import app.repositories.repo_factory as repo_factory
+import app.common.file_reading_util as file_reading_util
+import app.llms.open_api_code as open_api_code
+import app.llms.google_api_code as google_api_code
 import time
 import gradio as gr
 import pdb
-import bedrock_llama
-import frictionless_util
+import app.llms.bedrock_llama as bedrock_llama
+import app.common.frictionless_util as frictionless_util
 import cProfile
 import pstats
 from io import StringIO
+from app.common.path_utils import get_app_path
+from app.repositories.repo_factory import repo_factory
+import app.common.file_reading_util as file_reading_util
+import app.common.frictionless_util as frictionless_util
 
 
 def load_profile(profile_name):
     try:
-        with open(f"prompt_profiles/{profile_name}.json", 'r') as f:
+        with open(get_app_path('prompt_profiles', f'{profile_name}.json'), 'r') as f:
             profile = json.load(f)
         return profile['system_info'], profile['user_prompt']
     except Exception as e:
@@ -28,7 +32,7 @@ def load_profile(profile_name):
 
 def delete_profile(profile_name):
     try:
-        os.remove(f"prompt_profiles/{profile_name}.json")
+        os.remove(get_app_path('prompt_profiles', f'{profile_name}.json'))
         return f"Profile {profile_name} deleted.", list_profiles()
     except Exception as e:
         print(f"Error deleting profile {profile_name}: {e}")
@@ -45,7 +49,7 @@ def save_profile_action(profile_name, system_info, user_prompt):
             "system_info": system_info,
             "user_prompt": user_prompt
         }
-        with open(f"prompt_profiles/{profile_name}.json", 'w') as f:
+        with open(get_app_path('prompt_profiles', f'{profile_name}.json'), 'w') as f:
             json.dump(profile, f)
         return (f"Profile {profile_name} saved.",
                 gr.Dropdown(label="Load profile name", choices=list_profiles(), value=profile_name))
@@ -57,7 +61,7 @@ def load_file_list(doi):
     if doi:
         doi = doi.strip()
     try:
-        repo = repo_factory.repo_factory(doi)
+        repo = repo_factory(doi)
     except ValueError as e:
         err = f"Error loading DOI: {e}"
         return gr.update(choices=[err], value=err, visible=True), [err]
@@ -206,10 +210,9 @@ def reload_profiles():
 
 def list_profiles():
     try:
-        profiles = [f.split('.')[0] for f in os.listdir('prompt_profiles') if f.endswith('.json')]
+        profiles = [f.split('.')[0] for f in os.listdir(get_app_path('prompt_profiles')) if f.endswith('.json')]
         sorted_profiles = sorted(profiles, key=lambda s: s.lower())
         return ["[Select profile]"] + sorted_profiles
     except Exception as e:
         print(f"Error listing profiles: {e}")
         return ["[Select profile]"]
-

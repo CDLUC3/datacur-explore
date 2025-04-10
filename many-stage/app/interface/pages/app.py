@@ -1,45 +1,16 @@
 import gradio as gr
-import pandas as pd
-import markdown
-import pdb
-import open_api_code
-import google_api_code
-import argparse
 import os
 import json
-import repo_factory
-import file_reading_util
-import utils
+import app.interface.page_handlers.app as utils
+from app.common.path_utils import get_app_path
 
 # Read the local CSS file
-with open("styles.css", "r") as css_file:
+with open(get_app_path("interface", "pages", "styles.css"), "r") as css_file:
     css_content = css_file.read()
 
-# looking at https://www.cloudskillsboost.google/course_templates/552?utm_campaign=FY24-Q2-global-website-skillsboost&utm_content=developers&utm_medium=et&utm_source=cgc-site&utm_term=-
-# vertex ai studio
-
-# https://medium.com/@nimritakoul01/getting-started-with-gradio-python-library-49e59e363c66 seems a good intro to gradio
-# https://gradio.app/docs#quickstart
-# https://gradio.app/docs#gr.Interface
-
-def main():
-    parser = argparse.ArgumentParser(description="Run the Gradio app with specified options.")
-    parser.add_argument('--listen', type=str, default="127.0.0.1",
-                        help="If set, the app will listen on the the IP address.")
-    parser.add_argument('--port', type=int, default=7860, help="The port to run the app on.")
-    parser.add_argument('--share', action='store_true', help="If set, the app will create a public link.")
-    parser.add_argument('--user', type=str, help="Username for authentication.")
-    parser.add_argument('--password', type=str, help="Password for authentication.")
-    parser.add_argument('--debug', action='store_true', help="If set, the app will run in debug mode.")
-    parser.add_argument('--ssl_keyfile', type=str, help="Path to the SSL key file.")
-    parser.add_argument('--ssl_certfile', type=str, help="Path to the SSL certificate file.")
-
-    args = parser.parse_args()
-
-    # Create the Gradio interface
-    # iface = gr.Interface(fn=process_file_and_return_markdown, inputs="file", outputs="markdown")
-
-    default_system_info =\
+def create_app():
+    """Creates and returns the Gradio interface."""
+    default_system_info = \
         ("You are a system helping a researcher analyze a file containing research data in tabular format. "
          "The objective is to give advice to improve the data quality for reuse and reproducibility by other researchers "
          "in the same field. Besides general practices, specific advice for improving the given file is most useful. "
@@ -51,7 +22,8 @@ def main():
         'improved for reuse and reproducibility?')
 
     # Check if the JSON file exists and load values
-    json_file_path = './prompt_profiles/_default.json'
+    # correct path below
+    json_file_path = get_app_path('prompt_profiles', '_default.json')
     if os.path.exists(json_file_path):
         with open(json_file_path, 'r') as json_file:
             data = json.load(json_file)
@@ -104,14 +76,13 @@ def main():
                           inputs=[save_profile_name_input, system_info_input, user_prompt_input],
                           outputs=[status_output, profile_input])
 
-        del_button.click(fn=utils.delete_profile,inputs=profile_input,outputs=[status_output, profile_input])
+        del_button.click(fn=utils.delete_profile, inputs=profile_input, outputs=[status_output, profile_input])
 
         # DOI ACTIONS
         choices_state = gr.State()
         load_doi_button.click(fn=utils.load_file_list, inputs=doi_input, outputs=[select_files, choices_state])
 
         # SUBMIT ACTIONS
-        # app.py
         submit_button.click(
             fn=utils.process_file_and_return_markdown,
             inputs=[file_input, system_info_input, user_prompt_input, input_method, select_files,
@@ -119,12 +90,4 @@ def main():
             outputs=[textbox_output, markdown_output, status_output]
         )
 
-    auth = None
-    if args.user and args.password:
-        auth = (args.user, args.password)
-    iface.launch(debug=args.debug, share=args.share, auth=auth, server_name=args.listen, server_port=args.port,
-                 ssl_keyfile=args.ssl_keyfile, ssl_certfile=args.ssl_certfile)
-
-
-if __name__ == "__main__":
-    main()
+    return iface

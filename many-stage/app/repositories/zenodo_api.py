@@ -1,4 +1,4 @@
-from repo_interface import RepoInterface
+from app.repositories.repo_interface import RepoInterface
 import requests
 import urllib.parse
 import json

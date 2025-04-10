@@ -3,9 +3,9 @@ import vertexai
 from vertexai.generative_models import GenerativeModel, Part, FinishReason
 import vertexai.preview.generative_models as generative_models
 import pdb
-import config
+import app.config
 import mimetypes
-import file_reading_util
+import app.common.file_reading_util as file_reading_util
 
 
 def generate(file_context, system_info, prompt, starting_text=''):
