@@ -3,7 +3,7 @@ import vertexai
 from vertexai.generative_models import GenerativeModel, Part, FinishReason
 import vertexai.preview.generative_models as generative_models
 import pdb
-import app.config
+import app.config as config
 import mimetypes
 import app.common.file_reading_util as file_reading_util
 

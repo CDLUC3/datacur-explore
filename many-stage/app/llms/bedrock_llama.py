@@ -1,5 +1,4 @@
 import pdb
-import app.config
 import app.common.file_reading_util as file_reading_util
 import boto3
 import json

@@ -3,7 +3,7 @@ import openai
 import pdb
 import pandas as pd
 import codecs
-import app.config
+import app.config as config
 from striprtf.striprtf import rtf_to_text
 import app.common.file_reading_util as file_reading_util
 import logging
