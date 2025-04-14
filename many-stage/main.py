@@ -1,5 +1,5 @@
 import argparse
-from app.interface.pages.app import create_app
+from app.interface.app import create_app
 import sys
 import os
 
