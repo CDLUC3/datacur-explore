@@ -5,5 +5,5 @@ flagged/
 secrets.py
 local_secrets.py
 config.yaml
-prompt_profiles/*
-!prompt_profiles/_default.json
+app/prompt_profiles/*
+!app/prompt_profiles/_default*
