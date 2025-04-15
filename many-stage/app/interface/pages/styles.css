@@ -4,8 +4,8 @@
 }
 
 .bottom-align {
-    display: flex;
-    align-items: flex-end;
+    display: flex !important;
+    align-items: flex-end !important;
 }
 
 .grp-style {
@@ -13,5 +13,6 @@
 }
 
 .margin-bottom {
-    margin-bottom: 0.7rem;
+    margin-bottom: 0.7rem !important;
+    margin-right: 0.3rem !important;
 }

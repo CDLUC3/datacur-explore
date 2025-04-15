@@ -20,8 +20,6 @@ from app.interface.page_handlers.data_quality import (
 from app.common.path_utils import get_app_path
 
 def data_quality_page():
-    with open(get_app_path("interface", "pages", "styles.css"), "r") as css_file:
-        css_content = css_file.read()
 
     default_system_info = \
         ("You are a system helping a researcher analyze a file containing research data in tabular format. "
@@ -46,7 +44,7 @@ def data_quality_page():
     profiles = list_profiles()
 
     # Create the Gradio interface with additional text inputs
-    with gr.Blocks(css=css_content) as iface:
+    with gr.Blocks() as iface:
         with gr.Row():
             gr.Markdown("# Basic data quality analysis with LLMs")
         with gr.Row():

@@ -7,9 +7,6 @@ from app.common.path_utils import get_app_path
 
 def create_multi_llm_readme_page():
     """Creates the layout and handlers for the Multi Readme Analysis page."""
-    # Read the local CSS file
-    with open(get_app_path("interface", "pages", "styles.css"), "r") as css_file:
-        css_content = css_file.read()
 
     default_system_info = \
         ("You are a system helping a researcher analyze a file containing research data in tabular format. "
@@ -33,7 +30,7 @@ def create_multi_llm_readme_page():
     profiles = utils.list_profiles()
 
     # Create the Gradio interface for this page
-    with gr.Blocks(css=css_content):
+    with gr.Blocks():
         with gr.Row():
             gr.Markdown("# Multi stage readme analysis")
         with gr.Row():

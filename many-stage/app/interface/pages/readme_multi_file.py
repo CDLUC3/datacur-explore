@@ -6,10 +6,6 @@ import app.interface.page_handlers.readme_multi_file as readme_multi_file
 from app.common.path_utils import get_app_path
 
 def create_readme_page():
-    # Read the local CSS file
-    with open(get_app_path("interface", "pages", "styles.css"), "r") as css_file:
-        css_content = css_file.read()
-
     default_system_info =\
         ("You are a system helping a researcher create a draft of a README.md file to include with their research data "
          "deposit.  You'll be supplied with some files from which to infer as much relevant information as possible.")
@@ -32,7 +28,7 @@ def create_readme_page():
     profiles = utils.list_profiles()
 
     # Create the Gradio interface with additional text inputs
-    with gr.Blocks(css=css_content):
+    with gr.Blocks():
         with gr.Row():
             gr.Markdown("# Generate readme with LLMs from files")
         with gr.Row():
