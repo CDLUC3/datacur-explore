@@ -3,10 +3,7 @@ import os
 import app.llms.open_api_code as open_api_code
 import app.llms.google_api_code as google_api_code
 import gradio as gr
-import cProfile
-import pstats
 import app.common.file_reading_util as file_reading_util
-import app.common.frictionless_util as frictionless_util
 
 # this is a bit confusing since we are yielding to outputs that update the gradio interface and there
 # are three outputs because of quirks in how Gradio handles updates. I couldn't get it to update correctly unless
