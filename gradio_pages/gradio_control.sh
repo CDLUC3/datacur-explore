@@ -2,15 +2,15 @@
 
 # this is an example gradio control script with some values omitted
 
-cd /datacur/datacur-explore/gradio_gpt_gemini || exit
+cd /datacur/datacur-explore/gradio_pages || exit
 
 # Configurations
 export GOOGLE_APPLICATION_CREDENTIALS="path/to/your/credentials.json"
 PID_FILE="tmp/gradio_app.pid"
 SSL_KEYFILE="path/to/your/privkey.pem"
 SSL_CERTFILE="path/to/your/fullchain.pem"
-APP_COMMAND="python -u app.py --listen=domain --ssl_keyfile=$SSL_KEYFILE --ssl_certfile=$SSL_CERTFILE"
-# APP_COMMAND="python -u app.py --listen=0.0.0.0"
+APP_COMMAND="python -u main.py --listen=domain --ssl_keyfile=$SSL_KEYFILE --ssl_certfile=$SSL_CERTFILE"
+
 mkdir -p tmp
 mkdir -p log
 
@@ -21,7 +21,7 @@ start() {
     fi
 
     echo "Starting Gradio app..."
-    nohup $APP_COMMAND > log/gradio_app.log 2>&1 &
+    nohup $APP_COMMAND >> log/gradio_app.log 2>&1 &
     echo $! > "$PID_FILE"
     echo "Gradio app started with PID $(cat $PID_FILE)"
 }
