@@ -1,10 +1,11 @@
 import gradio as gr
 import os
 import json
-import app.interface.page_handlers.app as utils
+import app.interface.page_handlers.common as utils
+import app.interface.page_handlers.multi_llm_readme as multi_llm_readme
 from app.common.path_utils import get_app_path
 
-def create_multi_readme_page():
+def create_multi_llm_readme_page():
     """Creates the layout and handlers for the Multi Readme Analysis page."""
     # Read the local CSS file
     with open(get_app_path("interface", "pages", "styles.css"), "r") as css_file:
@@ -22,7 +23,7 @@ def create_multi_readme_page():
         'improved for reuse and reproducibility?')
 
     # Check if the JSON file exists and load values
-    json_file_path = get_app_path('prompt_profiles', '_default.json')
+    json_file_path = get_app_path('prompt_profiles', '_default_many_stage.json')
     if os.path.exists(json_file_path):
         with open(json_file_path, 'r') as json_file:
             data = json.load(json_file)
@@ -83,7 +84,7 @@ def create_multi_readme_page():
 
         # SUBMIT ACTIONS
         submit_button.click(
-            fn=utils.process_file_and_return_markdown,
+            fn=multi_llm_readme.process_file_and_return_markdown,
             inputs=[file_input, system_info_input, user_prompt_input, input_method, select_files,
                     choices_state, doi_input],
             outputs=[textbox_output, markdown_output, status_output]

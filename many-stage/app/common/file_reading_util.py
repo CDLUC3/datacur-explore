@@ -10,6 +10,46 @@ import os
 import threading
 import time
 from app.common.path_utils import get_app_path
+from app.repositories.repo_factory import repo_factory
+
+
+# yield to this to give updates progress while downloading
+def download_files(file_chooser, input_method, doi_input):
+    if input_method == 'Upload file':
+        # get the file paths
+        fns = [file.name for file in file_chooser]
+    else:
+        file_list = load_file_list(doi_input)
+        if isinstance(file_list, str):  # error message rather than a list
+            yield '', '', file_list
+        else:  # download the files
+            fns = []
+            for file_info in file_list:
+                fn = next(iter(file_info))
+                the_url = file_info[fn]
+                yield '', '', f"Downloading {fn}"
+                file_path = download_file(the_url, fn)
+                fns.append(file_path)
+    return fns
+
+
+# get the list of files for a Dryad or Zenodo DOI, they are formatted as a list of dicts
+# with the filename as the key and the download URL as the value
+def load_file_list(doi):
+    if doi:
+        doi = doi.strip()
+    try:
+        repo = repo_factory(doi)
+    except ValueError as e:
+        err = f"Error loading DOI: {e}"
+        return err
+
+    if not repo.id_exists():
+        err = f"DOI {doi} not found."
+        return err
+
+    file_list = repo.get_filenames_and_links()
+    return file_list
 
 
 # preliminaries for working with file input

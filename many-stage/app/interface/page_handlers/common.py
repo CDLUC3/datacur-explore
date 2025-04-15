@@ -3,18 +3,10 @@ import os
 import json
 from itertools import accumulate
 
-import app.repositories.repo_factory as repo_factory
-import app.common.file_reading_util as file_reading_util
+
 import app.llms.open_api_code as open_api_code
 import app.llms.google_api_code as google_api_code
-import time
 import gradio as gr
-import pdb
-import app.llms.bedrock_llama as bedrock_llama
-import app.common.frictionless_util as frictionless_util
-import cProfile
-import pstats
-from io import StringIO
 from app.common.path_utils import get_app_path
 from app.repositories.repo_factory import repo_factory
 import app.common.file_reading_util as file_reading_util
@@ -30,6 +22,7 @@ def load_profile(profile_name):
         print(f"Error loading profile {profile_name}: {e}")
         return "", ""
 
+
 def delete_profile(profile_name):
     try:
         os.remove(get_app_path('prompt_profiles', f'{profile_name}.json'))
@@ -37,6 +30,7 @@ def delete_profile(profile_name):
     except Exception as e:
         print(f"Error deleting profile {profile_name}: {e}")
         return f"Error deleting profile {profile_name}: {e}", list_profiles()
+
 
 # status_output, profile_input
 def save_profile_action(profile_name, system_info, user_prompt):
@@ -56,6 +50,7 @@ def save_profile_action(profile_name, system_info, user_prompt):
     except Exception as e:
         print(f"Error saving profile {profile_name}: {e}")
         return f"Error saving profile {profile_name}: {e}", list_profiles()
+
 
 def load_file_list(doi):
     if doi:
@@ -92,14 +87,12 @@ def process_file_and_return_markdown(file, system_info, user_prompt, input_metho
     if len(file_paths) == 0:
         return
 
-
     datafile_path = file_reading_util.find_file_with_tabular(file_paths)
 
     accum = ''
 
     if doi_input and input_method == 'Dryad or Zenodo DOI':
         accum += f"# DOI: {doi_input}\n\n"
-
 
     # ************************************
     # --- Frictionless data validation ---
@@ -114,13 +107,12 @@ def process_file_and_return_markdown(file, system_info, user_prompt, input_metho
 
     yield accum, accum, "Ran frictionless data validation..."
 
-
     # *************************
     # --- Gemini processing ---
     # *************************
 
     yield accum, accum, "Starting gemini processing of frictionless and data file..."
-    
+
     accum += f"## Gemini Output\n\n---\n\n"
 
     file_context = ""
@@ -157,56 +149,22 @@ def process_file_and_return_markdown(file, system_info, user_prompt, input_metho
         os.remove(file_path)
 
 
-def submit_for_frictionless(file, option, input_method, select_file, choices, doi_input):
-    file_paths, message = file_reading_util.file_setup(input_method, file, select_file, choices)
-    yield '', '', message
-    if len(file_paths) == 0:
-        yield '', 'Some files must be chosen'
-        return
-
-    file_path = file_reading_util.find_file_with_tabular(file_paths)
-
-    if file_path is None:
-        yield '', "Only CSV and Excel files are supported."
-        return
-
-    accum = ''
-    if doi_input and input_method == 'Dryad or Zenodo DOI':
-        accum += f"# DOI: {doi_input}\n\n"
-
-    accum += f"- Processing file: {os.path.basename(file_path)}\n\n"
-
-    yield '', "Running Frictionless examination..."
-    profiler = cProfile.Profile()
-    profiler.enable()
-    frict_info = frictionless_util.get_output(file_path)
-    profiler.disable()
-
-    # Print the profiling results
-    result = StringIO()
-    ps = pstats.Stats(profiler, stream=result).sort_stats(pstats.SortKey.CUMULATIVE)
-    ps.print_stats()
-    print(result.getvalue())
-
-    if frict_info == "":
-        frict_info = "No issues reported using the default Frictionless consistency checks."
-
-    accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n'
-    yield accum, "Done"
-
 def update_inputs(input_method):
     if input_method == "Upload file":
         return gr.update(visible=True), gr.update(visible=False)
     elif input_method == "Dryad or Zenodo DOI":
         return gr.update(visible=False), gr.update(visible=True)
 
+
 # These are utility functions, and not Gradio handlers, I think
 def update_textareas(profile_name):
     system_info, user_prompt = load_profile(profile_name)
     return system_info, user_prompt
 
+
 def reload_profiles():
     return gr.update(choices=list_profiles())
+
 
 def list_profiles():
     try:
