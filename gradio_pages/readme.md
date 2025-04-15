@@ -15,7 +15,7 @@ The key file will go somewhere on the server outside the application directory.
 For OpenAI, you'll need to create an account and get an API key. Put the key in config.yaml which gets read at startup.
 
 ```yaml
-openai_api_key: "sk-proj-yourapikey"
+openai_api_key: "sk-proj-yourapikey"              
 ```
 
 For AWS and Bedrock running locally you'll need to log in to the AWS console to make use of boto3.

@@ -19,7 +19,7 @@ def create_app():
         </style>
         """)
         with gr.Row():
-            gr.Markdown("# LLM analysis workflows")
+            gr.Markdown("# LLM workflows")
         with gr.Tabs():
             with gr.Tab("Improving data quality"):
                 data_quality_page()
