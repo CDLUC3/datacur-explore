@@ -2,6 +2,7 @@ import os
 
 import app.llms.open_api_code as open_api_code
 import app.llms.google_api_code as google_api_code
+import app.llms.bedrock_llama as bedrock_llama
 import gradio as gr
 import app.common.file_reading_util as file_reading_util
 
