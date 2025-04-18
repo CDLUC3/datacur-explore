@@ -1,0 +1,18 @@
+.small-button {
+    height: 3rem;
+    font-size: 0.8rem;
+}
+
+.bottom-align {
+    display: flex !important;
+    align-items: flex-end !important;
+}
+
+.grp-style {
+    background-color: white;
+}
+
+.margin-bottom {
+    margin-bottom: 0.7rem !important;
+    margin-right: 0.3rem !important;
+}
