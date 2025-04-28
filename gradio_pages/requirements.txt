@@ -54,6 +54,8 @@ distro==1.9.0
     # via openai
 docstring-parser==0.16
     # via google-cloud-aiplatform
+et-xmlfile==2.0.0
+    # via openpyxl
 exceptiongroup==1.2.2
     # via anyio
 fastapi==0.115.12
@@ -193,6 +195,8 @@ numpy==2.2.4
     #   pandas
     #   shapely
 openai==1.75.0
+    # via -r requirements.in
+openpyxl==3.1.5
     # via -r requirements.in
 orjson==3.10.16
     # via gradio

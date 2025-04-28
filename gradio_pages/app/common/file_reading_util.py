@@ -91,8 +91,10 @@ def read_first_of_file(file_path):
     
     
 def get_texty_content(from_file):
+    if from_file is None:
+        return ''
     if from_file.endswith('.xlsx') or from_file.endswith('.xls'):
-        df = pd.read_excel(from_file)
+        df = pd.read_excel(from_file, engine='openpyxl')
         texty_content = df.to_string()[0:5000]
     elif from_file.endswith('.tsv'):
         df = pd.read_csv(from_file, sep='\t')
@@ -107,7 +109,7 @@ def get_texty_content(from_file):
 
 def get_csv_content(from_file):
     if from_file.endswith('.xlsx') or from_file.endswith('.xls'):
-        df = pd.read_excel(from_file)
+        df = pd.read_excel(from_file, engine='openpyxl')
         csv_content = df.to_string()[0:10000]
     elif from_file.endswith('.tsv'):
         df = pd.read_csv(from_file, sep='\t')
