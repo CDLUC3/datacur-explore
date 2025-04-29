@@ -32,6 +32,11 @@ def make_readable_message(report):
             error_types[error.title] = []
         error_types[error.title].append(error.message)
 
+    # prune the error types to only include the first 20 errors in any one category
+    for error_type, messages in error_types.items():
+        if len(messages) > 20:
+            error_types[error_type] = messages[:20]
+
     # Create markdown formatted string
     markdown_message = ""
     for error_type, messages in error_types.items():
