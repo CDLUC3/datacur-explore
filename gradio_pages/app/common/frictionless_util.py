@@ -4,9 +4,19 @@ import pdb
 # go through a naive auto-validation based on inferring the schema
 def get_output(file_path):
     with system.use_context(trusted=True):
+        if file_path is None:
+            return ''
+        if file_path.endswith(".csv"):
+            the_format= "csv"
+        elif file_path.endswith(".tsv"):
+            the_format= "tsv"
+        elif file_path.endswith(".xlsx"):
+            the_format= "xlsx"
+        elif file_path.endswith(".xls"):
+            the_format= "xls"
         # Define a custom schema with additional missing values
         detector = Detector(field_missing_values=["N/A", "NA", "None", "null", "nil"])
-        resource = Resource(file_path, detector=detector)
+        resource = Resource(path=file_path, detector=detector, format=the_format)
         report = resource.validate()
         return make_readable_message(report)
 

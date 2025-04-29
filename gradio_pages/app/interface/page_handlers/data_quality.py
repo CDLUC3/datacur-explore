@@ -75,7 +75,7 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
 # a standalone function to run Frictionless data validation without other processing
 def submit_for_frictionless(file, option, input_method, select_file, choices, doi_input):
     file_paths, message = file_reading_util.file_setup(input_method, file, select_file, choices)
-    yield '', '', message
+    yield message, 'got files'
     if len(file_paths) == 0:
         yield '', 'Some files must be chosen'
         return
@@ -93,16 +93,16 @@ def submit_for_frictionless(file, option, input_method, select_file, choices, do
     accum += f"- Processing file: {os.path.basename(file_path)}\n\n"
 
     yield '', "Running Frictionless examination..."
-    profiler = cProfile.Profile()
-    profiler.enable()
+    # profiler = cProfile.Profile()
+    # profiler.enable()
     frict_info = frictionless_util.get_output(file_path)  # Corrected namespacing for frictionless_util
-    profiler.disable()
+    # profiler.disable()
 
     # Print the profiling results
-    result = StringIO()
-    ps = pstats.Stats(profiler, stream=result).sort_stats(pstats.SortKey.CUMULATIVE)
-    ps.print_stats()
-    print(result.getvalue())
+    # result = StringIO()
+    # ps = pstats.Stats(profiler, stream=result).sort_stats(pstats.SortKey.CUMULATIVE)
+    # ps.print_stats()
+    # print(result.getvalue())
 
     if frict_info == "":
         frict_info = "No issues reported using the default Frictionless consistency checks."

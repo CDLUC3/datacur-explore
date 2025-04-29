@@ -1,6 +1,7 @@
 boto3
 botocore
 frictionless
+frictionless[excel]
 google_cloud_aiplatform
 google-auth[aiohttp]
 gradio
@@ -13,3 +14,4 @@ Requests
 striprtf
 vertexai
 openpyxl
+xlrd

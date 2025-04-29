@@ -108,16 +108,19 @@ def get_texty_content(from_file):
 
 
 def get_csv_content(from_file):
-    if from_file.endswith('.xlsx') or from_file.endswith('.xls'):
+    if from_file.endswith('.xlsx'):
         df = pd.read_excel(from_file, engine='openpyxl')
-        csv_content = df.to_string()[0:10000]
+        csv_content = df.to_string()[0:8000]
+    elif from_file.endswith('.xls'):
+        df = pd.read_excel(from_file, engine='xlrd')
+        csv_content = df.to_string()[0:8000]
     elif from_file.endswith('.tsv'):
         df = pd.read_csv(from_file, sep='\t')
-        csv_content = df.to_string()[0:10000]
+        csv_content = df.to_string()[0:8000]
     elif from_file.endswith('.rtf'):
-        csv_content = convert_rtf_to_text(from_file)[0:10000]
+        csv_content = convert_rtf_to_text(from_file)[0:8000]
     else:
-        csv_content = read_first_of_file(from_file)[0:10000]
+        csv_content = read_first_of_file(from_file)[0:8000]
 
     return csv_content
 
