@@ -41,8 +41,8 @@ def process_file_and_return_markdown(file_chooser, system_info, user_prompt, llm
         return
 
     accum = ''
-    if doi_input and input_method == 'Dryad or Zenodo DOI':
-        accum += f"# DOI: {doi_input}\n\n"
+    # if doi_input and input_method == 'Dryad or Zenodo DOI':
+    #     accum += f"# DOI: {doi_input}\n\n"
 
     file_context = ''
     for file_path in file_paths:
@@ -73,7 +73,7 @@ def process_file_and_return_markdown(file_chooser, system_info, user_prompt, llm
         except StopIteration as e:
             response, accum = e.value
 
-        accum += f"\n\n---\n\n"
+        # accum += f"\n\n---\n\n"
 
         yield accum, accum, f"Done with {llm_option} processing", None
 
