@@ -5,6 +5,7 @@ import app.llms.google_api_code as google_api_code
 import app.llms.bedrock_llama as bedrock_llama
 import gradio as gr
 import app.common.file_reading_util as file_reading_util
+import pdb
 
 # this is a bit confusing since we are yielding to outputs that update the gradio interface and there
 # are three outputs because of quirks in how Gradio handles updates. I couldn't get it to update correctly unless
@@ -23,10 +24,20 @@ import app.common.file_reading_util as file_reading_util
 def process_file_and_return_markdown(file_chooser, system_info, user_prompt, llm_option,
                                      input_method, doi_input):
 
-    file_paths = yield from file_reading_util.download_files(file_chooser, input_method, doi_input)
+    # this extra wrapping around the generator is to allow us to yield from it for 4 items
+    # instead of 3 which is what the generator yields, the StopIteration exception is used to
+    # get the return value from the generator which is different than the yield value
+    gen = file_reading_util.download_files(file_chooser, input_method, doi_input)
+
+    try:
+        while True:
+            item = next(gen)
+            yield (*item, None)  # Add a 4th item to match expected output
+    except StopIteration as e:
+        file_paths = e.value  # This is the return value from the generator
 
     if isinstance(file_paths, str):  # if it returns a string, it's an error message
-        yield '', '', file_paths
+        yield '', '', file_paths, None
         return
 
     accum = ''
@@ -38,23 +49,39 @@ def process_file_and_return_markdown(file_chooser, system_info, user_prompt, llm
         file_content = file_reading_util.get_texty_content(file_path)
         file_context += f"## Filename: {os.path.basename(file_path)}\n\n{file_content}\n\n"
 
-    yield accum, accum, "Starting LLM processing..."
+    yield accum, accum, "Starting LLM processing...", None
 
-    if llm_option == "GPT-4o":
-        cgpt_response, accum = yield from open_api_code.generate(file_context, system_info, user_prompt, accum)
-        accum += f"\n\n---\n\n"
-        yield accum, accum, "Done with ChatGPT processing"
+    llm_generators = {
+        "GPT-4o": open_api_code.generate,
+        "gemini-2.0-flash": google_api_code.generate,
+        "llama3.1-70b": bedrock_llama.generate,
+    }
 
-    elif llm_option == "gemini-2.0-flash":
-        google_response, accum = yield from google_api_code.generate(file_context, system_info, user_prompt, accum)
-        accum += f"\n\n---\n\n"
-        yield accum, accum, "Done with gemini processing"
+    # Select the correct function based on llm_option
+    generator_fn = llm_generators.get(llm_option)
 
-    elif llm_option == "llama3.1-70b":
-        llama_response, accum = yield from bedrock_llama.generate(file_content, system_info, user_prompt, accum)
+    if generator_fn:
+        # this extra wrapping around the generator is to allow us to yield from it for 4 items
+        # instead of 3 which is what the generator yields, the StopIteration exception is used to
+        # get the return value from the generator
+
+        gen = generator_fn(file_context, system_info, user_prompt, accum)
+        try:
+            while True:
+                item = next(gen)
+                yield (*item, None)  # Add a 4th item to match expected output
+        except StopIteration as e:
+            response, accum = e.value
+
         accum += f"\n\n---\n\n"
-        yield accum, accum, "Done with Llama processing"
+
+        yield accum, accum, f"Done with {llm_option} processing", None
 
     # remove the uploaded files
     for file_path in file_paths:
         os.remove(file_path)
+
+    dl_path = "output.md"
+    with open("output.md", "w") as f:
+        f.write(accum)
+    yield accum, accum, f"Done with {llm_option} processing", dl_path

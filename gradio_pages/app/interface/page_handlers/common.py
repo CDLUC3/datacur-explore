@@ -174,3 +174,5 @@ def list_profiles():
     except Exception as e:
         print(f"Error listing profiles: {e}")
         return ["[Select profile]"]
+
+
