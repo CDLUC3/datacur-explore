@@ -5,7 +5,7 @@ import app.interface.page_handlers.common as utils
 import app.interface.page_handlers.readme_multi_file as readme_multi_file
 from app.common.path_utils import get_app_path
 
-def create_readme_page():
+def create_readme_page(js_inject_content=None):
     default_system_info =\
         ("You are a system helping a researcher create a draft of a README.md file to include with their research data "
          "deposit.  You'll be supplied with some files from which to infer as much relevant information as possible.")
@@ -57,8 +57,9 @@ def create_readme_page():
             with gr.Column(elem_id="right-column", elem_classes="column"):
                 status_output = gr.Textbox(visible=True, label="Status", placeholder="Status messages will appear here")
                 textbox_output = gr.Textbox(visible=False, show_label=False, placeholder="Output will appear here")
-                markdown_output = gr.Markdown(visible=True)
+                markdown_output = gr.Markdown(visible=True, elem_id="readme-markdown")
                 download_control = gr.File(label="Download output")
+                load_sample_output = gr.Button("Load sample output", elem_classes="small-button")
 
                 # frict_md_output = gr.Markdown(visible=True)
 
@@ -72,6 +73,9 @@ def create_readme_page():
                           outputs=[status_output, profile_input])
 
         del_button.click(fn=utils.delete_profile, inputs=profile_input, outputs=[status_output, profile_input])
+        load_sample_output.click(fn=readme_multi_file.load_sample_output, outputs=[markdown_output])
+        pdb.set_trace()
+        gr.HTML(f"<script>{js_inject_content}</script>")
 
         # SUBMIT ACTIONS
         submit_button.click(

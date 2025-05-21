@@ -5,6 +5,7 @@ import app.llms.google_api_code as google_api_code
 import app.llms.bedrock_llama as bedrock_llama
 import gradio as gr
 import app.common.file_reading_util as file_reading_util
+from app.common.path_utils import get_app_path
 import pdb
 
 # this is a bit confusing since we are yielding to outputs that update the gradio interface and there
@@ -85,3 +86,9 @@ def process_file_and_return_markdown(file_chooser, system_info, user_prompt, llm
     with open("output.md", "w") as f:
         f.write(accum)
     yield accum, accum, f"Done with {llm_option} processing", dl_path
+
+def load_sample_output():
+    # Load the sample output from a file
+    with open(f"{get_app_path('prompt_profiles')}/_sample_output.md", "r") as f:
+        sample_output = f.read()
+    return sample_output

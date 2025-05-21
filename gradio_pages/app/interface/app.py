@@ -12,6 +12,9 @@ def create_app():
     with open(get_app_path("interface", "pages", "styles.css"), "r") as css_file:
         css_content = css_file.read()
 
+    with open(get_app_path("interface", "pages", "js_inject.js"), "r") as js_file:
+        js_inject_content = js_file.read()
+
     with gr.Blocks() as iface:
         gr.HTML(f"""
         <style>
@@ -24,7 +27,7 @@ def create_app():
             with gr.Tab("Improving data quality"):
                 data_quality_page()
             with gr.Tab("Readme from multiple files"):
-                create_readme_page()
+                create_readme_page(js_inject_content)
             with gr.Tab("Multi stage readme creation"):
                 create_multi_llm_readme_page()
 
