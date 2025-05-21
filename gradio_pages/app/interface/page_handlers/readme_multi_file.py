@@ -6,7 +6,6 @@ import app.llms.bedrock_llama as bedrock_llama
 import gradio as gr
 import app.common.file_reading_util as file_reading_util
 from app.common.path_utils import get_app_path
-import pdb
 
 # this is a bit confusing since we are yielding to outputs that update the gradio interface and there
 # are three outputs because of quirks in how Gradio handles updates. I couldn't get it to update correctly unless

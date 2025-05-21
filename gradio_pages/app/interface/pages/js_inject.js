@@ -1,4 +1,4 @@
-function addPrintButton() {
+(function addPrintButton() {
   // Avoid adding it multiple times
   if (document.getElementById("print-readme-button")) return;
 
@@ -41,9 +41,9 @@ function addPrintButton() {
   };
 
   // Add it below the output section or root
+  console.log('adding print button to the dom');
   const target = document.querySelector("body");
   target.appendChild(btn);
-}
+})();
 
-window.addEventListener('DOMContentLoaded', addPrintButton);
 

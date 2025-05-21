@@ -27,9 +27,15 @@ def create_app():
             with gr.Tab("Improving data quality"):
                 data_quality_page()
             with gr.Tab("Readme from multiple files"):
-                create_readme_page(js_inject_content)
+                create_readme_page()
             with gr.Tab("Multi stage readme creation"):
                 create_multi_llm_readme_page()
+
+            # 1) Run on initial load in case the Readme-tab is default-active
+            iface.load(fn=None, inputs=None, outputs=None, _js=js_inject_content)
+
+            # 2) Re-run every time you switch _to_ that tab
+            readme_tab.select(fn=None, inputs=None, outputs=None, _js=js_inject_content)
 
             # Additional pages can be added here in the future
     return iface

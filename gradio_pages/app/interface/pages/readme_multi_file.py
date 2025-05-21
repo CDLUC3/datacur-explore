@@ -4,6 +4,7 @@ import json
 import app.interface.page_handlers.common as utils
 import app.interface.page_handlers.readme_multi_file as readme_multi_file
 from app.common.path_utils import get_app_path
+import pdb
 
 def create_readme_page(js_inject_content=None):
     default_system_info =\
@@ -60,6 +61,21 @@ def create_readme_page(js_inject_content=None):
                 markdown_output = gr.Markdown(visible=True, elem_id="readme-markdown")
                 download_control = gr.File(label="Download output")
                 load_sample_output = gr.Button("Load sample output", elem_classes="small-button")
+                # Escape backticks in the JS to safely include it inside a JS template literal
+                escaped_js = js_inject_content.replace("`", "\\`")
+
+                gr.HTML(f"""
+                <div id="print-button-inject"></div>
+                <script>
+                  (function() {{
+                    const js = `{escaped_js}`;
+                    const script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.text = js;
+                    document.body.appendChild(script);
+                  }})();
+                </script>
+                """)
 
                 # frict_md_output = gr.Markdown(visible=True)
 
@@ -74,8 +90,6 @@ def create_readme_page(js_inject_content=None):
 
         del_button.click(fn=utils.delete_profile, inputs=profile_input, outputs=[status_output, profile_input])
         load_sample_output.click(fn=readme_multi_file.load_sample_output, outputs=[markdown_output])
-        pdb.set_trace()
-        gr.HTML(f"<script>{js_inject_content}</script>")
 
         # SUBMIT ACTIONS
         submit_button.click(
