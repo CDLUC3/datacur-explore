@@ -63,6 +63,7 @@ def create_multi_llm_readme_page():
                 status_output = gr.Textbox(visible=True, label="Status", placeholder="Status messages will appear here")
                 textbox_output = gr.Textbox(visible=False, show_label=False, placeholder="Output will appear here")
                 markdown_output = gr.Markdown(visible=True)
+                download_control = gr.File(label="Download output")
 
         input_method.change(fn=utils.update_inputs, inputs=input_method, outputs=[file_input, doi_group])
 
@@ -84,5 +85,5 @@ def create_multi_llm_readme_page():
             fn=multi_llm_readme.process_file_and_return_markdown,
             inputs=[file_input, system_info_input, user_prompt_input, input_method, select_files,
                     choices_state, doi_input],
-            outputs=[textbox_output, markdown_output, status_output]
+            outputs=[textbox_output, markdown_output, status_output, download_control]
         )

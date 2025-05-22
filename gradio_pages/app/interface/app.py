@@ -30,7 +30,7 @@ def create_app():
                 data_quality_page()
             with gr.Tab("Readme from multiple files") as readme_tab:
                 create_readme_page()
-            with gr.Tab("Multi stage readme creation"):
+            with gr.Tab("Multi stage readme creation") as readme_multi_stage:
                 create_multi_llm_readme_page()
 
         # 1) Run on initial load in case the Readme-tab is default-active
@@ -38,6 +38,6 @@ def create_app():
 
         # 2) Re-run every time you switch _to_ that tab
         readme_tab.select(fn=None, inputs=None, outputs=None, js=js_inject_content)
+        readme_multi_stage.select(fn=None, inputs=None, outputs=None, js=js_inject_content)
 
-            # Additional pages can be added here in the future
     return iface
