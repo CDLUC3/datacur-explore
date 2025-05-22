@@ -12,8 +12,10 @@ def create_app():
     with open(get_app_path("interface", "pages", "styles.css"), "r") as css_file:
         css_content = css_file.read()
 
-    with open(get_app_path("interface", "pages", "js_inject.js"), "r") as js_file:
+    # Load the JavaScript file content
+    with open(get_app_path("interface", "pages", "js_inject.js"), "r", encoding="utf-8-sig") as js_file:
         js_inject_content = js_file.read()
+        js_inject_content = js_inject_content.strip()
 
     with gr.Blocks() as iface:
         gr.HTML(f"""
@@ -31,11 +33,11 @@ def create_app():
             with gr.Tab("Multi stage readme creation"):
                 create_multi_llm_readme_page()
 
-            # 1) Run on initial load in case the Readme-tab is default-active
-            iface.load(fn=None, inputs=None, outputs=None, js=js_inject_content)
+        # 1) Run on initial load in case the Readme-tab is default-active
+        iface.load(fn=None, inputs=None, outputs=None, js=js_inject_content)
 
-            # 2) Re-run every time you switch _to_ that tab
-            readme_tab.select(fn=None, inputs=None, outputs=None, js=js_inject_content)
+        # 2) Re-run every time you switch _to_ that tab
+        readme_tab.select(fn=None, inputs=None, outputs=None, js=js_inject_content)
 
             # Additional pages can be added here in the future
     return iface
