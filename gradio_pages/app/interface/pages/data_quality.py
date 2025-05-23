@@ -39,6 +39,9 @@ def data_quality_page():
             data = json.load(json_file)
             default_system_info = data.get('system_info', default_system_info)
             default_user_prompt = data.get('user_prompt', default_user_prompt)
+            default_user_prompt2 = data.get('user_prompt2', '')
+
+    user_prompt_input2 = gr.State(default_user_prompt2)
 
     options = ["GPT-4o", "gemini-2.0-flash", "llama3.1-70b"]
     profiles = list_profiles()
@@ -87,10 +90,10 @@ def data_quality_page():
 
         # PROFILE ACTIONS
         profile_input.change(fn=update_textareas, inputs=profile_input,
-                             outputs=[system_info_input, user_prompt_input])
+                             outputs=[system_info_input, user_prompt_input, user_prompt_input2])
         reload_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
         save_button.click(fn=save_profile_action,
-                          inputs=[save_profile_name_input, system_info_input, user_prompt_input],
+                          inputs=[save_profile_name_input, system_info_input, user_prompt_input, user_prompt_input2],
                           outputs=[status_output, profile_input])
 
         del_button.click(fn=delete_profile, inputs=profile_input, outputs=[status_output, profile_input])
