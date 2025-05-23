@@ -1,5 +1,6 @@
 # utils.py
 import os
+import pdb
 
 import app.llms.open_api_code as open_api_code
 import app.llms.google_api_code as google_api_code
@@ -20,7 +21,7 @@ import app.common.frictionless_util as frictionless_util
 # I hope this behavior continues to work as expected since it doesn't seem to be explicitly intended.
 
 # The three outputs it has to yield and update are textbox, markdown and status_output (in that order)
-def process_file_and_return_markdown(file, system_info, user_prompt, input_method, select_file, choices,
+def process_file_and_return_markdown(file, system_info, user_prompt, user_prompt2, input_method, select_file, choices,
                                      doi_input):
     file_paths, message = file_reading_util.file_setup(input_method, file, select_file, choices)
     yield '', '', message, None
@@ -91,7 +92,7 @@ def process_file_and_return_markdown(file, system_info, user_prompt, input_metho
     file_context += f"## Gemini output\n\n{google_response}\n\n"
     file_context += f"## Filename: {os.path.basename(datafile_path)}\n\n{file_text}\n\n"
 
-    gen = open_api_code.generate(file_context, system_info, user_prompt, accum)
+    gen = open_api_code.generate(file_context, system_info, user_prompt2, accum)
 
     try:
         while True:

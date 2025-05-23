@@ -85,7 +85,7 @@ def create_multi_llm_readme_page():
         # SUBMIT ACTIONS
         submit_button.click(
             fn=multi_llm_readme.process_file_and_return_markdown,
-            inputs=[file_input, system_info_input, user_prompt_input, input_method, select_files,
+            inputs=[file_input, system_info_input, user_prompt_input, user_prompt_input2, input_method, select_files,
                     choices_state, doi_input],
             outputs=[textbox_output, markdown_output, status_output, download_control]
         )
