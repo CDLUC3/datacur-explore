@@ -1,16 +1,41 @@
 () => {
-  if (document.getElementById("print-readme-button")) return;
+  console.log('ran function to inject print button');
+
+  const printButton = document.getElementById("print-readme-button");
+
+  if ((printButton) && printButton.offsetParent !== null) return;
+
+  console.log('1st check passed');
 
   // find the rendered README container
-  const readmeProse = document.querySelector("#readme-markdown .prose");
-  if (!readmeProse) {
+  let readmeProse = document.querySelectorAll(".readme-markdown .prose");
+
+  // skip if none
+  if (readmeProse.length === 0) {
     console.debug("print button: readme container not found – skipping");
+    return;
+  }
+
+  console.log('2nd check passed');
+
+  // find the first element that is visible
+  let found = false
+  for (let i = 0; i < readmeProse.length; i++) {
+    if (readmeProse[i].offsetParent !== null) {
+      readmeProse = readmeProse[i];
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    console.debug("readme container not found – skipping");
     return;
   }
 
   // build the button
   const btn = document.createElement("button");
-  btn.id = "print-readme-button";
+  btn.className = "print-readme-button";
   btn.textContent = "🖨️ Print README";
   btn.style.cssText = "margin-top: 10px; padding: 8px; font-size: 14px;";
 
@@ -146,6 +171,12 @@
   };
 
   // inject right after the prose
-  readmeProse.insertAdjacentElement("afterend", btn);
-  console.log("print button injected");
+  // Check if a print button already exists after the prose
+  const nextElem = readmeProse.nextElementSibling;
+  if (nextElem && nextElem.classList.contains("print-readme-button")) {
+    console.log("print button already exists after prose – skipping injection");
+  } else {
+    readmeProse.insertAdjacentElement("afterend", btn);
+    console.log("print button injected");
+  }
 }
