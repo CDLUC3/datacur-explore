@@ -63,7 +63,6 @@ def create_readme_page(js_inject_content=None):
                 textbox_output = gr.Textbox(visible=False, show_label=False, placeholder="Output will appear here")
                 markdown_output = gr.Markdown(visible=True, elem_classes="readme-markdown")
                 download_control = gr.File(label="Download output")
-                load_sample_output = gr.Button("Load sample output", elem_classes="small-button")
 
                 # frict_md_output = gr.Markdown(visible=True)
 
@@ -77,7 +76,6 @@ def create_readme_page(js_inject_content=None):
                           outputs=[status_output, profile_input])
 
         del_button.click(fn=utils.delete_profile, inputs=profile_input, outputs=[status_output, profile_input])
-        load_sample_output.click(fn=readme_multi_file.load_sample_output, outputs=[markdown_output])
 
         # SUBMIT ACTIONS
         submit_button.click(

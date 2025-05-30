@@ -26,7 +26,7 @@ def create_app():
         with gr.Row():
             gr.Markdown("# LLM workflows")
         with gr.Tabs():
-            with gr.Tab("Improving data quality"):
+            with gr.Tab("Improving data quality") as data_quality_tab:
                 data_quality_page()
             with gr.Tab("Readme from multiple files") as readme_tab:
                 create_readme_page()
@@ -39,5 +39,7 @@ def create_app():
         # 2) Re-run every time you switch _to_ that tab
         readme_tab.select(fn=None, inputs=None, outputs=None, js=js_inject_content)
         readme_multi_stage.select(fn=None, inputs=None, outputs=None, js=js_inject_content)
+        data_quality_tab.select(fn=None, inputs=None, outputs=None, js=js_inject_content)
+
 
     return iface

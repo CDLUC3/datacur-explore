@@ -36,7 +36,7 @@
   // build the button
   const btn = document.createElement("button");
   btn.className = "print-readme-button";
-  btn.textContent = "🖨️ Print README";
+  btn.textContent = "🖨️ Print output";
   btn.style.cssText = "margin-top: 10px; padding: 8px; font-size: 14px;";
 
   btn.onclick = () => {

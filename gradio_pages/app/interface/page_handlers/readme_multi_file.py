@@ -85,9 +85,3 @@ def process_file_and_return_markdown(file_chooser, system_info, user_prompt, llm
     with open("output.md", "w") as f:
         f.write(accum)
     yield accum, accum, f"Done with {llm_option} processing", dl_path
-
-def load_sample_output():
-    # Load the sample output from a file
-    with open(f"{get_app_path('prompt_profiles')}/_sample_output.md", "r") as f:
-        sample_output = f.read()
-    return sample_output

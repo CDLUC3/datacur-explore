@@ -83,7 +83,7 @@ def data_quality_page():
             with gr.Column(elem_id="right-column", elem_classes="column"):
                 status_output = gr.Textbox(visible=True, label="Status", placeholder="Status messages will appear here")
                 textbox_output = gr.Textbox(visible=False, show_label=False, placeholder="Output will appear here")
-                markdown_output = gr.Markdown(visible=True)
+                markdown_output = gr.Markdown(visible=True, elem_classes="readme-markdown")
 
         input_method.change(fn=update_inputs, inputs=input_method, outputs=[file_input, doi_group])
 
