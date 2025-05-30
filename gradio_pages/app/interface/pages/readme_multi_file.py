@@ -43,7 +43,7 @@ def create_readme_page(js_inject_content=None):
                 with gr.Group(visible=True, elem_classes='grp-style') as doi_group:
                     with gr.Row(elem_classes="bottom-align grp-style"):
                         doi_input = gr.Textbox(label="Dryad or Zenodo DOI", placeholder="e.g. 10.5061/dryad.8515j",
-                                               value="10.5281/zenodo.13948032")
+                                               value="10.5061/dryad.stqjq2c3d")
                 with gr.Accordion("Prompting", open=True):
                     system_info_input = gr.TextArea(label="System conditioning", value=default_system_info)
                     user_prompt_input = gr.TextArea(label="User prompt", value=default_user_prompt)
