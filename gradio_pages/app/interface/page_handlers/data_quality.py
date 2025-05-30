@@ -37,13 +37,13 @@ def process_file_and_return_markdown(file, system_info, prompt, option, input_me
 
     # File processing of input files moved out of LLM client functions
     readme_file, data_file = file_reading_util.readme_and_data(file_paths)
-    data_content = file_reading_util.get_csv_content(data_file)
+    data_content = file_reading_util.get_texty_content(data_file)
     readme_content = ''
 
     data_content = f'DATA FILE\n---\n{data_content}\n---\n'
 
     if readme_file is not None:
-        readme_content = file_reading_util.get_csv_content(readme_file)
+        readme_content = file_reading_util.get_texty_content(readme_file)
         data_content += f'README FILE\n---\n{readme_content}\n---\n'
     if frict_info:
         data_content += f'Report from Frictionless data validation\n---\n{frict_info}\n---\n'
@@ -77,13 +77,13 @@ def submit_for_frictionless(file, option, input_method, select_file, choices, do
     file_paths, message = file_reading_util.file_setup(input_method, file, select_file, choices)
     yield '', '', message
     if len(file_paths) == 0:
-        yield '', 'Some files must be chosen'
+        yield '', '', 'Some files must be chosen'
         return
 
     file_path = file_reading_util.find_file_with_tabular(file_paths)
 
     if file_path is None:
-        yield '', "Only CSV and Excel files are supported."
+        yield '', '', "Only CSV and Excel files are supported."
         return
 
     accum = ''
@@ -92,23 +92,14 @@ def submit_for_frictionless(file, option, input_method, select_file, choices, do
 
     accum += f"- Processing file: {os.path.basename(file_path)}\n\n"
 
-    yield '', "Running Frictionless examination..."
-    profiler = cProfile.Profile()
-    profiler.enable()
+    yield '', '', "Running Frictionless examination..."
     frict_info = frictionless_util.get_output(file_path)  # Corrected namespacing for frictionless_util
-    profiler.disable()
-
-    # Print the profiling results
-    result = StringIO()
-    ps = pstats.Stats(profiler, stream=result).sort_stats(pstats.SortKey.CUMULATIVE)
-    ps.print_stats()
-    print(result.getvalue())
 
     if frict_info == "":
         frict_info = "No issues reported using the default Frictionless consistency checks."
 
     accum += f'## Report from frictionless data validation\n\n{frict_info}\n\n'
-    yield accum, "Done"
+    yield accum, accum, "Done"
 
     # remove the uploaded files
     for file_path in file_paths:

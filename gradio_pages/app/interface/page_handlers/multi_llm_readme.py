@@ -134,16 +134,7 @@ def submit_for_frictionless(file, option, input_method, select_file, choices, do
     accum += f"- Processing file: {os.path.basename(file_path)}\n\n"
 
     yield '', "Running Frictionless examination..."
-    profiler = cProfile.Profile()
-    profiler.enable()
     frict_info = frictionless_util.get_output(file_path)
-    profiler.disable()
-
-    # Print the profiling results
-    result = StringIO()
-    ps = pstats.Stats(profiler, stream=result).sort_stats(pstats.SortKey.CUMULATIVE)
-    ps.print_stats()
-    print(result.getvalue())
 
     if frict_info == "":
         frict_info = "No issues reported using the default Frictionless consistency checks."

@@ -102,22 +102,14 @@ def get_texty_content(from_file):
     else:
         texty_content = read_first_of_file(from_file)[0:5000]
 
+    # remove any incomplete lines at the end if it's a tabular file so it doesn't cause data quality issues if examining
+    if (from_file.endswith('.xlsx') or from_file.endswith('.xls') or from_file.endswith('.tsv') or \
+        from_file.endswith('.csv')) and "\n" in texty_content:
+        lines = texty_content.split('\n')
+        if len(lines) > 1 and not lines[-1].strip():
+            texty_content = '\n'.join(lines[:-1])  # remove the last empty line
+
     return texty_content
-
-
-def get_csv_content(from_file):
-    if from_file.endswith('.xlsx') or from_file.endswith('.xls'):
-        df = pd.read_excel(from_file)
-        csv_content = df.to_string()[0:10000]
-    elif from_file.endswith('.tsv'):
-        df = pd.read_csv(from_file, sep='\t')
-        csv_content = df.to_string()[0:10000]
-    elif from_file.endswith('.rtf'):
-        csv_content = convert_rtf_to_text(from_file)[0:10000]
-    else:
-        csv_content = read_first_of_file(from_file)[0:10000]
-
-    return csv_content
 
 
 def download_file(url, filename=None):
