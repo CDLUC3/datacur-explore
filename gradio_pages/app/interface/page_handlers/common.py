@@ -17,10 +17,10 @@ def load_profile(profile_name):
     try:
         with open(get_app_path('prompt_profiles', f'{profile_name}.json'), 'r') as f:
             profile = json.load(f)
-        return profile['system_info'], profile['user_prompt']
+        return profile['system_info'], profile['user_prompt'], profile.get('user_prompt2', '')
     except Exception as e:
         print(f"Error loading profile {profile_name}: {e}")
-        return "", ""
+        return "", "", ""
 
 
 def delete_profile(profile_name):
@@ -33,7 +33,7 @@ def delete_profile(profile_name):
 
 
 # status_output, profile_input
-def save_profile_action(profile_name, system_info, user_prompt):
+def save_profile_action(profile_name, system_info, user_prompt, user_prompt2=''):
     if profile_name is None:
         return "Profile name is required", list_profiles()
     if profile_name.endswith('.json'):
@@ -41,7 +41,8 @@ def save_profile_action(profile_name, system_info, user_prompt):
     try:
         profile = {
             "system_info": system_info,
-            "user_prompt": user_prompt
+            "user_prompt": user_prompt,
+            "user_prompt2": user_prompt2
         }
         with open(get_app_path('prompt_profiles', f'{profile_name}.json'), 'w') as f:
             json.dump(profile, f)
@@ -158,8 +159,8 @@ def update_inputs(input_method):
 
 # These are utility functions, and not Gradio handlers, I think
 def update_textareas(profile_name):
-    system_info, user_prompt = load_profile(profile_name)
-    return system_info, user_prompt
+    system_info, user_prompt, user_prompt2 = load_profile(profile_name)
+    return system_info, user_prompt, user_prompt2
 
 
 def reload_profiles():
@@ -174,3 +175,5 @@ def list_profiles():
     except Exception as e:
         print(f"Error listing profiles: {e}")
         return ["[Select profile]"]
+
+

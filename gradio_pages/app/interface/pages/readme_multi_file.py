@@ -4,8 +4,9 @@ import json
 import app.interface.page_handlers.common as utils
 import app.interface.page_handlers.readme_multi_file as readme_multi_file
 from app.common.path_utils import get_app_path
+import pdb
 
-def create_readme_page():
+def create_readme_page(js_inject_content=None):
     default_system_info =\
         ("You are a system helping a researcher create a draft of a README.md file to include with their research data "
          "deposit.  You'll be supplied with some files from which to infer as much relevant information as possible.")
@@ -23,6 +24,9 @@ def create_readme_page():
             data = json.load(json_file)
             default_system_info = data.get('system_info', default_system_info)
             default_user_prompt = data.get('user_prompt', default_user_prompt)
+            default_user_prompt2 = data.get('user_prompt2', '')
+
+    user_prompt_input2 = gr.State(default_user_prompt2)
 
     options = ["GPT-4o", "gemini-2.0-flash", "llama3.1-70b"]
     profiles = utils.list_profiles()
@@ -39,7 +43,7 @@ def create_readme_page():
                 with gr.Group(visible=True, elem_classes='grp-style') as doi_group:
                     with gr.Row(elem_classes="bottom-align grp-style"):
                         doi_input = gr.Textbox(label="Dryad or Zenodo DOI", placeholder="e.g. 10.5061/dryad.8515j",
-                                               value="10.5281/zenodo.13948032")
+                                               value="10.5061/dryad.stqjq2c3d")
                 with gr.Accordion("Prompting", open=True):
                     system_info_input = gr.TextArea(label="System conditioning", value=default_system_info)
                     user_prompt_input = gr.TextArea(label="User prompt", value=default_user_prompt)
@@ -57,16 +61,18 @@ def create_readme_page():
             with gr.Column(elem_id="right-column", elem_classes="column"):
                 status_output = gr.Textbox(visible=True, label="Status", placeholder="Status messages will appear here")
                 textbox_output = gr.Textbox(visible=False, show_label=False, placeholder="Output will appear here")
-                markdown_output = gr.Markdown(visible=True)
+                markdown_output = gr.Markdown(visible=True, elem_classes="readme-markdown")
+                download_control = gr.File(label="Download output")
+
                 # frict_md_output = gr.Markdown(visible=True)
 
         input_method.change(fn=utils.update_inputs, inputs=input_method, outputs=[file_input, doi_group])
 
         # PROFILE ACTIONS
-        profile_input.change(fn=utils.update_textareas, inputs=profile_input, outputs=[system_info_input, user_prompt_input])
+        profile_input.change(fn=utils.update_textareas, inputs=profile_input, outputs=[system_info_input, user_prompt_input, user_prompt_input2])
         reload_button.click(fn=utils.reload_profiles, inputs=None, outputs=profile_input)
         save_button.click(fn=utils.save_profile_action,
-                          inputs=[save_profile_name_input, system_info_input, user_prompt_input],
+                          inputs=[save_profile_name_input, system_info_input, user_prompt_input, user_prompt_input2],
                           outputs=[status_output, profile_input])
 
         del_button.click(fn=utils.delete_profile, inputs=profile_input, outputs=[status_output, profile_input])
@@ -75,5 +81,5 @@ def create_readme_page():
         submit_button.click(
             fn=readme_multi_file.process_file_and_return_markdown,
             inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, doi_input],
-            outputs=[textbox_output, markdown_output, status_output]
+            outputs=[textbox_output, markdown_output, status_output, download_control]
         )

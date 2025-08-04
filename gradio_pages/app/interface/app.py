@@ -12,6 +12,11 @@ def create_app():
     with open(get_app_path("interface", "pages", "styles.css"), "r") as css_file:
         css_content = css_file.read()
 
+    # Load the JavaScript file content
+    with open(get_app_path("interface", "pages", "js_inject.js"), "r", encoding="utf-8-sig") as js_file:
+        js_inject_content = js_file.read()
+        js_inject_content = js_inject_content.strip()
+
     with gr.Blocks() as iface:
         gr.HTML(f"""
         <style>
@@ -21,12 +26,20 @@ def create_app():
         with gr.Row():
             gr.Markdown("# LLM workflows")
         with gr.Tabs():
-            with gr.Tab("Improving data quality"):
+            with gr.Tab("Improving data quality") as data_quality_tab:
                 data_quality_page()
-            with gr.Tab("Readme from multiple files"):
+            with gr.Tab("Readme from multiple files") as readme_tab:
                 create_readme_page()
-            with gr.Tab("Multi stage readme creation"):
+            with gr.Tab("Multi stage readme creation") as readme_multi_stage:
                 create_multi_llm_readme_page()
 
-            # Additional pages can be added here in the future
+        # 1) Run on initial load in case the Readme-tab is default-active
+        iface.load(fn=None, inputs=None, outputs=None, js=js_inject_content)
+
+        # 2) Re-run every time you switch _to_ that tab
+        readme_tab.select(fn=None, inputs=None, outputs=None, js=js_inject_content)
+        readme_multi_stage.select(fn=None, inputs=None, outputs=None, js=js_inject_content)
+        data_quality_tab.select(fn=None, inputs=None, outputs=None, js=js_inject_content)
+
+
     return iface

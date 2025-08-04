@@ -39,6 +39,9 @@ def data_quality_page():
             data = json.load(json_file)
             default_system_info = data.get('system_info', default_system_info)
             default_user_prompt = data.get('user_prompt', default_user_prompt)
+            default_user_prompt2 = data.get('user_prompt2', '')
+
+    user_prompt_input2 = gr.State(default_user_prompt2)
 
     options = ["GPT-4o", "gemini-2.0-flash", "llama3.1-70b"]
     profiles = list_profiles()
@@ -80,17 +83,17 @@ def data_quality_page():
             with gr.Column(elem_id="right-column", elem_classes="column"):
                 status_output = gr.Textbox(visible=True, label="Status", placeholder="Status messages will appear here")
                 textbox_output = gr.Textbox(visible=False, show_label=False, placeholder="Output will appear here")
-                markdown_output = gr.Markdown(visible=True)
-                frict_md_output = gr.Markdown(visible=True)
+                markdown_output = gr.Markdown(visible=True, elem_classes="readme-markdown")
+                download_control = gr.File(label="Download output")
 
         input_method.change(fn=update_inputs, inputs=input_method, outputs=[file_input, doi_group])
 
         # PROFILE ACTIONS
         profile_input.change(fn=update_textareas, inputs=profile_input,
-                             outputs=[system_info_input, user_prompt_input])
+                             outputs=[system_info_input, user_prompt_input, user_prompt_input2])
         reload_button.click(fn=reload_profiles, inputs=None, outputs=profile_input)
         save_button.click(fn=save_profile_action,
-                          inputs=[save_profile_name_input, system_info_input, user_prompt_input],
+                          inputs=[save_profile_name_input, system_info_input, user_prompt_input, user_prompt_input2],
                           outputs=[status_output, profile_input])
 
         del_button.click(fn=delete_profile, inputs=profile_input, outputs=[status_output, profile_input])
@@ -104,10 +107,10 @@ def data_quality_page():
             fn=process_file_and_return_markdown,
             inputs=[file_input, system_info_input, user_prompt_input, option_input, input_method, select_files,
                     choices_state, doi_input, include_frictionless],
-            outputs=[textbox_output, markdown_output, status_output]
+            outputs=[textbox_output, markdown_output, status_output, download_control]
         )
         frictionless_submit.click(
             fn=submit_for_frictionless,
             inputs=[file_input, option_input, input_method, select_files, choices_state, doi_input],
-            outputs=[frict_md_output, status_output]
+            outputs=[textbox_output, markdown_output, status_output, download_control]
         )
