@@ -6,6 +6,7 @@ import app.llms.bedrock_llama as bedrock_llama
 import gradio as gr
 import app.common.file_reading_util as file_reading_util
 from app.common.path_utils import get_app_path
+from app.llms import MODEL_NAMES_TO_GEN_FUNC, MODEL_NAMES_TO_IDS
 
 # this is a bit confusing since we are yielding to outputs that update the gradio interface and there
 # are three outputs because of quirks in how Gradio handles updates. I couldn't get it to update correctly unless
@@ -51,21 +52,16 @@ def process_file_and_return_markdown(file_chooser, system_info, user_prompt, llm
 
     yield accum, accum, "Starting LLM processing...", None
 
-    llm_generators = {
-        "GPT-4o": open_api_code.generate,
-        "gemini-2.0-flash": google_api_code.generate,
-        "llama3.1-70b": bedrock_llama.generate,
-    }
-
     # Select the correct function based on llm_option
-    generator_fn = llm_generators.get(llm_option)
+    generator_fn = MODEL_NAMES_TO_GEN_FUNC.get(llm_option)
+    model_id = MODEL_NAMES_TO_IDS[llm_option]
 
     if generator_fn:
         # this extra wrapping around the generator is to allow us to yield from it for 4 items
         # instead of 3 which is what the generator yields, the StopIteration exception is used to
         # get the return value from the generator
 
-        gen = generator_fn(file_context, system_info, user_prompt, accum)
+        gen = generator_fn(file_context, system_info, user_prompt, accum, model_id)
         try:
             while True:
                 item = next(gen)

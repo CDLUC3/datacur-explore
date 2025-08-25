@@ -9,6 +9,7 @@ import cProfile
 import pstats
 import app.common.file_reading_util as file_reading_util
 import app.common.frictionless_util as frictionless_util
+from app.llms import MODEL_NAMES_TO_GEN_FUNC, MODEL_NAMES_TO_IDS
 
 
 # this is a bit confusing since we are yielding to outputs that update the gradio interface and there

@@ -8,7 +8,7 @@ import mimetypes
 import app.common.file_reading_util as file_reading_util
 
 
-def generate(file_context, system_info, prompt, starting_text=''):
+def generate(file_context, system_info, prompt, starting_text='', model_id='gemini-2.0-flash'):
 
     # for larger files and using their special storage, this URL seems to document how to do it
     # https://cloud.google.com/vertex-ai/docs/python-sdk/data-classes
@@ -32,7 +32,7 @@ def generate(file_context, system_info, prompt, starting_text=''):
     }
 
     model = GenerativeModel(
-        "gemini-2.0-flash",
+        model_id,
         system_instruction=[system_info]
     )
 

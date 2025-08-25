@@ -5,7 +5,7 @@ import json
 from botocore.exceptions import ClientError
 import textwrap
 
-def generate(file_context, system_info, prompt, starting_text=''):
+def generate(file_context, system_info, prompt, starting_text='', model_id='meta.llama3-1-70b-instruct-v1:0'):
 
     session = boto3.Session()
     client = session.client("bedrock-runtime", region_name="us-west-2")
@@ -20,9 +20,6 @@ def generate(file_context, system_info, prompt, starting_text=''):
 
     # this one doesn't support on-demand inference
     # meta.llama3-2-90b-instruct-v1:0
-
-    # Set the model ID
-    model_id = "meta.llama3-1-70b-instruct-v1:0"
 
     # it seems like I may need to drop to the native format to specify system info
 

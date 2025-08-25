@@ -6,6 +6,8 @@ import app.interface.page_handlers.readme_multi_file as readme_multi_file
 from app.common.path_utils import get_app_path
 import pdb
 
+from app.llms import UI_OPTIONS
+
 def create_readme_page(js_inject_content=None):
     default_system_info =\
         ("You are a system helping a researcher create a draft of a README.md file to include with their research data "
@@ -28,7 +30,6 @@ def create_readme_page(js_inject_content=None):
 
     user_prompt_input2 = gr.State(default_user_prompt2)
 
-    options = ["GPT-4o", "gemini-2.0-flash", "llama3.1-70b"]
     profiles = utils.list_profiles()
 
     # Create the Gradio interface with additional text inputs
@@ -56,7 +57,7 @@ def create_readme_page(js_inject_content=None):
                     with gr.Row(elem_classes="bottom-align"):
                         save_profile_name_input = gr.Textbox(label="Profile name to save")
                         save_button = gr.Button("Save Profile", elem_classes="small-button")
-                option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
+                option_input = gr.Radio(label="Choose an option", choices=UI_OPTIONS, value="GPT-4o")
                 submit_button = gr.Button("Submit to LLM")
             with gr.Column(elem_id="right-column", elem_classes="column"):
                 status_output = gr.Textbox(visible=True, label="Status", placeholder="Status messages will appear here")

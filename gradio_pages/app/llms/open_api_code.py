@@ -13,17 +13,16 @@ import gradio as gr
 
 # Check https://github.com/openai/openai-python for the latest version of the OpenAI Python library.
 
-def generate(file_context, system_info, prompt, starting_text=''):
-
+def generate(file_context, system_info, prompt, starting_text='', model_id='gpt-4o'):
     client = openai.OpenAI(api_key=config.get('openai_api_key'))
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model=model_id,
         messages=[
             {"role": "system", "content": system_info},
             {"role": "user", "content": prompt + '\n\n' + file_context}
         ],
-        max_tokens=4096,
+        max_completion_tokens=4096,
         stream=True
     )
 

@@ -19,6 +19,8 @@ from app.interface.page_handlers.data_quality import (
 
 from app.common.path_utils import get_app_path
 
+from app.llms import UI_OPTIONS
+
 def data_quality_page():
 
     default_system_info = \
@@ -43,7 +45,6 @@ def data_quality_page():
 
     user_prompt_input2 = gr.State(default_user_prompt2)
 
-    options = ["GPT-4o", "gemini-2.0-flash", "llama3.1-70b"]
     profiles = list_profiles()
 
     # Create the Gradio interface with additional text inputs
@@ -77,7 +78,7 @@ def data_quality_page():
                         save_profile_name_input = gr.Textbox(label="Profile name to save")
                         save_button = gr.Button("Save Profile", elem_classes="small-button")
                 include_frictionless = gr.Checkbox(label="Validate w/ Frictionless and send to LLM", value=False)
-                option_input = gr.Radio(label="Choose an option", choices=options, value="GPT-4o")
+                option_input = gr.Radio(label="Choose an option", choices=UI_OPTIONS, value="GPT-4o")
                 frictionless_submit = gr.Button("Submit for Frictionless validation")
                 submit_button = gr.Button("Submit to LLM")
             with gr.Column(elem_id="right-column", elem_classes="column"):

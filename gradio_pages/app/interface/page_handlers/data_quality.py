@@ -10,6 +10,8 @@ import app.common.frictionless_util as frictionless_util  # Corrected import for
 import app.llms.bedrock_llama as bedrock_llama  # Corrected import for bedrock_llama
 import gradio as gr
 
+from app.llms import MODEL_NAMES_TO_GEN_FUNC, MODEL_NAMES_TO_IDS
+
 
 # this is a bit confusing since we are yielding to outputs that update the gradio interface and there
 # are three outputs because of quirks in how Gradio handles updates. I couldn't get it to update correctly unless
@@ -58,25 +60,21 @@ def process_file_and_return_markdown(file, system_info, prompt, llm_option, inpu
 
     yield accum, accum, "Starting LLM processing...", None
 
-    llm_generators = {
-        "GPT-4o": open_api_code.generate,
-        "gemini-2.0-flash": google_api_code.generate,
-        "llama3.1-70b": bedrock_llama.generate,
-    }
+    model_id = MODEL_NAMES_TO_IDS[llm_option]
 
     # Select the correct function based on llm_option
-    generator_fn = llm_generators.get(llm_option)
+    generator_fn = MODEL_NAMES_TO_GEN_FUNC.get(llm_option)
 
     if generator_fn:
         # this extra wrapping around the generator is to allow us to yield from it for 4 items
         # instead of 3 which is what the generator yields from previously, the StopIteration exception is used to
         # get the final return value from the generator
 
-        gen = generator_fn(data_content, system_info, prompt, accum)
+        gen = generator_fn(data_content, system_info, prompt, accum, model_id)
         try:
             while True:
                 item = next(gen)
-                yield (*item, None)  # Add a 4th item to match expected output
+                yield *item, None  # Add a 4th item to match expected output
         except StopIteration as e:
             response, accum = e.value
 
