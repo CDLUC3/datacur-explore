@@ -2,7 +2,7 @@
 
 # this is an example gradio control script with some values omitted
 
-cd /datacur/datacur-explore/gradio_pages || exit
+cd /datacur/datacur-explore || exit
 
 # Configurations
 export GOOGLE_APPLICATION_CREDENTIALS="path/to/your/credentials.json"
