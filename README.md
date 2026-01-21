@@ -85,7 +85,7 @@ git pull
 ```
 
 
-# OLD for many projects - DEPRECATED
+# Previous description for the main README
 # Data curation exploration code
 
 The repo is for sharing small exploratory projects and shouldn't be considered robust

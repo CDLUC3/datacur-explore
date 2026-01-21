@@ -1,7 +1,7 @@
+from pathlib import Path
 import argparse
 from app.interface.app import create_app
 import sys
-import os
 
 
 # determine a robust project root (where `app` package lives)
