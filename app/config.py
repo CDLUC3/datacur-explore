@@ -29,17 +29,29 @@ if not IN_COLAB:
     else:
         print(f"Warning: {config_path} not found.")
 else:
-    # Colab environment: Load from userdata secrets
+    # Colab environment: Load from userdata secrets or environment variables
     try:
         from google.colab import userdata
-        for item in KEYS:
-            try:
-                config[item] = userdata.get(item)
-            except Exception as e:
-                # Secret might be missing or not accessible
-                print(f"Warning: Failed to retrieve secret '{item}': {e}")
     except ImportError:
-        print("Error: google.colab module not found.")
+        userdata = None
+
+    for item in KEYS:
+        value = None
+        # Try userdata first
+        if userdata:
+            try:
+                value = userdata.get(item)
+            except Exception:
+                pass
+
+        # If not found, try environment variables
+        if value is None:
+            value = os.getenv(item.upper())
+
+        if value:
+            config[item] = value
+        else:
+            print(f"Warning: Secret '{item}' not found.")
 
 
 def get(key):
