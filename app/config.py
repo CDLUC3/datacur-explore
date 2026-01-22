@@ -5,7 +5,7 @@ if os.getenv('COLAB_RELEASE_TAG'):
 else:
     IN_COLAB = False
 
-KEYS = ['openai_api_key', 'google_project', 'google_location', 'google_api_key']
+KEYS = ['openai_api_key', 'google_project', 'google_location', 'google_api_key', 'dryad_api_key', 'dryad_secret']
 
 if not IN_COLAB:
     # Get the directory of the current file
@@ -32,3 +32,8 @@ def get(key):
     except Exception as e:
         print(f"Error getting {key}: {e}")
         return None
+
+
+# this is mostly just for setting and short-term peristing the dryad api token
+def set(key, value):
+    config[key] = value

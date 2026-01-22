@@ -11,6 +11,7 @@ import threading
 import time
 from app.common.path_utils import get_app_path
 from app.repositories.repo_factory import repo_factory
+import app.config as config
 
 
 # yield to this to give updates progress while downloading
@@ -112,6 +113,53 @@ def get_texty_content(from_file):
     return texty_content
 
 
+# Helper to obtain and cache a Dryad OAuth token (stored under key 'token' in config)
+def _get_dryad_token():
+    # Prefer existing cached token
+    token = config.get('token')
+    if token:
+        return token
+
+    client_id = config.get('dryad_api_key')
+    client_secret = config.get('dryad_secret')
+
+    if not client_id or not client_secret:
+        raise RuntimeError('Dryad API credentials are not configured (dryad_api_key/dryad_secret)')
+
+    token_url = 'https://datadryad.org/oauth/token'
+
+    # First try client credentials with HTTP Basic auth (common OAuth pattern)
+    try:
+        resp = requests.post(token_url,
+                             data={'grant_type': 'client_credentials'},
+                             auth=(client_id, client_secret),
+                             timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            token = data.get('access_token') or data.get('token')
+        else:
+            # Fallback: send client_id/client_secret in body
+            resp = requests.post(token_url,
+                                 data={'grant_type': 'client_credentials',
+                                       'client_id': client_id,
+                                       'client_secret': client_secret},
+                                 timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                token = data.get('access_token') or data.get('token')
+            else:
+                raise RuntimeError(f'Failed to obtain Dryad token (status {resp.status_code}): {resp.text}')
+    except requests.RequestException as e:
+        raise RuntimeError(f'Error requesting Dryad token: {e}')
+
+    if not token:
+        raise RuntimeError('Dryad token not found in token response')
+
+    # Cache token for future calls
+    config.set('token', token)
+    return token
+
+
 def download_file(url, filename=None):
     max_size = 300 * 1024 * 1024  # 300MB in bytes
     chunk_size = 1024  # 1KB
@@ -125,8 +173,21 @@ def download_file(url, filename=None):
         temp_file = tempfile.NamedTemporaryFile(delete=False, dir=directory)
         temp_file_path = temp_file.name
 
+    # Prepare headers; add Authorization header only for datadryad.org downloads
+    headers = {}
+    if url.startswith('https://datadryad.org'):
+        try:
+            token = _get_dryad_token()
+            headers['Authorization'] = f'Bearer {token}'
+        except Exception as e:
+            # If we cannot obtain a token, surface the error so caller can see why download failed
+            raise
+
     # Download the file from the internet in chunks
-    response = requests.get(url, stream=True)
+    if headers:
+        response = requests.get(url, stream=True, headers=headers)
+    else:
+        response = requests.get(url, stream=True)
     response.raise_for_status()  # Check if the request was successful
 
     total_size = 0
