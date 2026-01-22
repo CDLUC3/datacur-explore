@@ -114,11 +114,17 @@ def get_texty_content(from_file):
 
 
 # Helper to obtain and cache a Dryad OAuth token (stored under key 'token' in config)
-def _get_dryad_token():
-    # Prefer existing cached token
-    token = config.get('token')
-    if token:
-        return token
+def _get_dryad_token(force_refresh=False):
+    # Use cached token if available and not expired unless force_refresh is True
+    if not force_refresh:
+        token = config.get('token')
+        expires_at = config.get('token_expires_at')
+        try:
+            if token and expires_at and time.time() < float(expires_at) - 10:
+                return token
+        except Exception:
+            # If any issue reading expiry, fall through to refresh
+            pass
 
     client_id = config.get('dryad_api_key')
     client_secret = config.get('dryad_secret')
@@ -137,6 +143,7 @@ def _get_dryad_token():
         if resp.status_code == 200:
             data = resp.json()
             token = data.get('access_token') or data.get('token')
+            expires_in = data.get('expires_in')
         else:
             # Fallback: send client_id/client_secret in body
             resp = requests.post(token_url,
@@ -147,6 +154,7 @@ def _get_dryad_token():
             if resp.status_code == 200:
                 data = resp.json()
                 token = data.get('access_token') or data.get('token')
+                expires_in = data.get('expires_in')
             else:
                 raise RuntimeError(f'Failed to obtain Dryad token (status {resp.status_code}): {resp.text}')
     except requests.RequestException as e:
@@ -155,8 +163,15 @@ def _get_dryad_token():
     if not token:
         raise RuntimeError('Dryad token not found in token response')
 
-    # Cache token for future calls
+    # Cache token and expiry (if provided) for future calls
     config.set('token', token)
+    try:
+        if expires_in:
+            expires_at = time.time() + int(expires_in)
+            config.set('token_expires_at', expires_at)
+    except Exception:
+        # ignore expiry caching errors
+        pass
     return token
 
 
@@ -175,19 +190,43 @@ def download_file(url, filename=None):
 
     # Prepare headers; add Authorization header only for datadryad.org downloads
     headers = {}
-    if url.startswith('https://datadryad.org'):
-        try:
-            token = _get_dryad_token()
-            headers['Authorization'] = f'Bearer {token}'
-        except Exception as e:
-            # If we cannot obtain a token, surface the error so caller can see why download failed
-            raise
+    is_dryad = url.startswith('https://datadryad.org')
+    if is_dryad:
+        token = _get_dryad_token()
+        headers['Authorization'] = f'Bearer {token}'
 
-    # Download the file from the internet in chunks
-    if headers:
-        response = requests.get(url, stream=True, headers=headers)
-    else:
-        response = requests.get(url, stream=True)
+    # Attempt the download. If it fails for Dryad due to connection error or 401/403,
+    # refresh token once and retry exactly one time before giving up.
+    tried_refresh = False
+    while True:
+        try:
+            response = requests.get(url, stream=True, headers=headers)
+        except requests.RequestException as e:
+            if is_dryad and not tried_refresh:
+                # Try refreshing token once and retry
+                token = _get_dryad_token(force_refresh=True)
+                headers['Authorization'] = f'Bearer {token}'
+                tried_refresh = True
+                continue
+            else:
+                # Non-dryad or already retried: propagate
+                raise
+
+        # If Dryad responded with unauthorized/forbidden, try refreshing token once then retry
+        if is_dryad and response.status_code in (401, 403) and not tried_refresh:
+            tried_refresh = True
+            try:
+                token = _get_dryad_token(force_refresh=True)
+                headers['Authorization'] = f'Bearer {token}'
+            except Exception:
+                # If refresh failed, raise the HTTP error
+                response.raise_for_status()
+            # Retry the request once with refreshed token
+            continue
+
+        # Otherwise we have a usable response (or non-Dryad response)
+        break
+
     response.raise_for_status()  # Check if the request was successful
 
     total_size = 0
