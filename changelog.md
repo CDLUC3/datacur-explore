@@ -12,4 +12,6 @@
   - Removed legacy/extra directories: `dryad_meta_dl/`, `zenodo_meta_dl/`, and the old `gradio_pages/` subtree was largely removed or moved.
   - Build/dependency changes: updated `requirements.in` / `requirements.txt` and upgraded dependencies for security.
   - Misc: updates to `main.py`, `gradio_control.sh`, `.gitignore`, README and other repo housekeeping.
-
+  - Colab Support:
+    - Updated `app/config.py` to support loading secrets from Google Colab's `userdata` when running in a Colab environment.
+    - Updated profile management to persist profiles to Google Drive when running in Colab, ensuring data is not lost between sessions.
