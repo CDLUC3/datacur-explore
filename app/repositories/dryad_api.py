@@ -1,8 +1,7 @@
 from app.repositories.repo_interface import RepoInterface
 import requests
 import urllib.parse
-import json
-import pdb
+import app.config as config
 
 BASE_URL = 'https://datadryad.org'
 
@@ -22,7 +21,9 @@ class DryadApi(RepoInterface):
         return not (self.get_metadata() is None)
 
     def get_metadata(self):
-        response = requests.get(f'{BASE_URL}/api/v2/datasets/doi:{urllib.parse.quote(self.doi, safe="")}')
+        ua = config.get('user_agent') or 'DataCurationExploration/0.1'
+        headers = {'accept': 'application/json', 'User-Agent': ua}
+        response = requests.get(f'{BASE_URL}/api/v2/datasets/doi:{urllib.parse.quote(self.doi, safe="")}', headers=headers)
         if response.status_code != 200:
             return None
         info = response.json()
@@ -30,8 +31,10 @@ class DryadApi(RepoInterface):
 
     def get_filenames_and_links(self):
         meta = self.get_metadata()
+        ua = config.get('user_agent') or 'DataCurationExploration/0.1'
+        headers = {'accept': 'application/json', 'User-Agent': ua}
         response = requests.get(f"{BASE_URL}{meta['_links']['stash:version']['href']}",
-                                headers=HEADERS)
+                                headers=headers)
         version_info = response.json()
 
         page = f"{BASE_URL}{version_info['_links']['stash:files']['href']}"
@@ -41,7 +44,7 @@ class DryadApi(RepoInterface):
         # go through all the pages of files for this version
         while True:
             # Get the files info for the current page
-            response = requests.get(page, headers=HEADERS)
+            response = requests.get(page, headers=headers)
             json_response = response.json()
 
             # go through every file in response

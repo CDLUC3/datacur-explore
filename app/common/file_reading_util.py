@@ -92,25 +92,25 @@ def read_first_of_file(file_path):
     
     
 def get_texty_content(from_file):
-    if from_file.endswith('.xlsx') or from_file.endswith('.xls'):
-        df = pd.read_excel(from_file)
-        texty_content = df.to_string()[0:5000]
-    elif from_file.endswith('.tsv'):
-        df = pd.read_csv(from_file, sep='\t')
-        texty_content = df.to_string()[0:5000]
-    elif from_file.endswith('.rtf'):
-        texty_content = convert_rtf_to_text(from_file)[0:5000]
-    else:
-        texty_content = read_first_of_file(from_file)[0:5000]
+        if from_file.endswith('.xlsx') or from_file.endswith('.xls'):
+            df = pd.read_excel(from_file)
+            texty_content = df.to_string()[0:5000]
+        elif from_file.endswith('.tsv'):
+            df = pd.read_csv(from_file, sep='\t')
+            texty_content = df.to_string()[0:5000]
+        elif from_file.endswith('.rtf'):
+            texty_content = convert_rtf_to_text(from_file)[0:5000]
+        else:
+            texty_content = read_first_of_file(from_file)[0:5000]
 
-    # remove any incomplete lines at the end if it's a tabular file so it doesn't cause data quality issues if examining
-    if (from_file.endswith('.xlsx') or from_file.endswith('.xls') or from_file.endswith('.tsv') or \
-        from_file.endswith('.csv')) and "\n" in texty_content:
-        lines = texty_content.split('\n')
-        if len(lines) > 1 and not lines[-1].strip():
-            texty_content = '\n'.join(lines[:-1])  # remove the last empty line
+        # remove any incomplete lines at the end if it's a tabular file so it doesn't cause data quality issues if examining
+        if (from_file.endswith('.xlsx') or from_file.endswith('.xls') or from_file.endswith('.tsv') or \
+            from_file.endswith('.csv')) and "\n" in texty_content:
+            lines = texty_content.split('\n')
+            if len(lines) > 1 and not lines[-1].strip():
+                texty_content = '\n'.join(lines[:-1])  # remove the last empty line
 
-    return texty_content
+        return texty_content
 
 
 # Helper to obtain and cache a Dryad OAuth token (stored under key 'token' in config)
@@ -134,11 +134,15 @@ def _get_dryad_token(force_refresh=False):
 
     token_url = 'https://datadryad.org/oauth/token'
 
+    ua = config.get('user_agent') or 'DataCurationExploration/0.1'
+    headers = {'User-Agent': ua}
+
     # First try client credentials with HTTP Basic auth (common OAuth pattern)
     try:
         resp = requests.post(token_url,
                              data={'grant_type': 'client_credentials'},
                              auth=(client_id, client_secret),
+                             headers=headers,
                              timeout=10)
         if resp.status_code == 200:
             data = resp.json()
@@ -150,6 +154,7 @@ def _get_dryad_token(force_refresh=False):
                                  data={'grant_type': 'client_credentials',
                                        'client_id': client_id,
                                        'client_secret': client_secret},
+                                 headers=headers,
                                  timeout=10)
             if resp.status_code == 200:
                 data = resp.json()
@@ -190,6 +195,8 @@ def download_file(url, filename=None):
 
     # Prepare headers; add Authorization header only for datadryad.org downloads
     headers = {}
+    ua = config.get('user_agent') or 'DataCurationExploration/0.1'
+    headers['User-Agent'] = ua
     is_dryad = url.startswith('https://datadryad.org')
     if is_dryad:
         token = _get_dryad_token()

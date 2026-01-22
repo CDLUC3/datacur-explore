@@ -1,9 +1,7 @@
 from app.repositories.repo_interface import RepoInterface
 import requests
-import urllib.parse
-import json
-import pdb
 import re
+import app.config as config
 
 BASE_URL = 'https://zenodo.org/api/'
 
@@ -29,8 +27,9 @@ class ZenodoApi(RepoInterface):
         params = {
             'q': f'doi:{self.doi}'
         }
+        ua = config.get('user_agent') or 'DataCurationExploration/0.1'
         headers = {
-            "User-Agent": "DataCurationExploration/0.3 (mailto:sfisher@ucop.edu)"
+            "User-Agent": ua
         }
         response = requests.get(f'{BASE_URL}records', params=params, headers=headers)
         if response.status_code != 200:
@@ -69,7 +68,9 @@ class ZenodoApi(RepoInterface):
         if deposition_id is None:
             return None
 
-        response = requests.get(f'{BASE_URL}records/{deposition_id}')
+        ua = config.get('user_agent') or 'DataCurationExploration/0.1'
+        headers = {"User-Agent": ua}
+        response = requests.get(f'{BASE_URL}records/{deposition_id}', headers=headers)
         if response.status_code != 200:
             return None
         info = response.json()
