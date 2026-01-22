@@ -1,7 +1,0 @@
-.venv/*
-output/*
-.idea/*
-__pycache__/*
-secrets.py
-local_secrets.py
-*.zip

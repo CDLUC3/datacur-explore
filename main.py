@@ -1,9 +1,20 @@
+from pathlib import Path
 import argparse
 from app.interface.app import create_app
 import sys
-import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# determine a robust project root (where `app` package lives)
+_here = Path(__file__).resolve().parent
+if (_here / 'app').is_dir():
+    _project_root = _here
+elif (_here.parent / 'app').is_dir():
+    _project_root = _here.parent
+else:
+    # fallback to previous behavior (closest parent)
+    _project_root = _here.parent
+
+sys.path.insert(0, str(_project_root))
 
 
 def main():

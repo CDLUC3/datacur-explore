@@ -7,7 +7,7 @@ from itertools import accumulate
 import app.llms.open_api_code as open_api_code
 import app.llms.google_api_code as google_api_code
 import gradio as gr
-from app.common.path_utils import get_app_path
+from app.common.path_utils import get_app_path, get_profile_path, list_profile_files
 from app.repositories.repo_factory import repo_factory
 import app.common.file_reading_util as file_reading_util
 import app.common.frictionless_util as frictionless_util
@@ -15,7 +15,7 @@ import app.common.frictionless_util as frictionless_util
 
 def load_profile(profile_name):
     try:
-        with open(get_app_path('prompt_profiles', f'{profile_name}.json'), 'r') as f:
+        with open(get_profile_path(profile_name), 'r') as f:
             profile = json.load(f)
         return profile['system_info'], profile['user_prompt'], profile.get('user_prompt2', '')
     except Exception as e:
@@ -25,7 +25,7 @@ def load_profile(profile_name):
 
 def delete_profile(profile_name):
     try:
-        os.remove(get_app_path('prompt_profiles', f'{profile_name}.json'))
+        os.remove(get_profile_path(profile_name))
         return f"Profile {profile_name} deleted.", list_profiles()
     except Exception as e:
         print(f"Error deleting profile {profile_name}: {e}")
@@ -44,7 +44,7 @@ def save_profile_action(profile_name, system_info, user_prompt, user_prompt2='')
             "user_prompt": user_prompt,
             "user_prompt2": user_prompt2
         }
-        with open(get_app_path('prompt_profiles', f'{profile_name}.json'), 'w') as f:
+        with open(get_profile_path(profile_name), 'w') as f:
             json.dump(profile, f)
         return (f"Profile {profile_name} saved.",
                 gr.Dropdown(label="Load profile name", choices=list_profiles(), value=profile_name))
@@ -169,11 +169,9 @@ def reload_profiles():
 
 def list_profiles():
     try:
-        profiles = [f.split('.')[0] for f in os.listdir(get_app_path('prompt_profiles')) if f.endswith('.json')]
+        profiles = [f.split('.')[0] for f in list_profile_files()]
         sorted_profiles = sorted(profiles, key=lambda s: s.lower())
         return ["[Select profile]"] + sorted_profiles
     except Exception as e:
         print(f"Error listing profiles: {e}")
         return ["[Select profile]"]
-
-

@@ -1,3 +1,16 @@
+# These are specific to the gradio app
+secret.py
+.idea/
+*.csv
+flagged/
+secrets.py
+local_secrets.py
+config.yaml
+app/prompt_profiles/*
+!app/prompt_profiles/_default*
+
+# GENERAL ignores
+
 *.log
 .DS_Store
 
