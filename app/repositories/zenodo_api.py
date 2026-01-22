@@ -29,7 +29,10 @@ class ZenodoApi(RepoInterface):
         params = {
             'q': f'doi:{self.doi}'
         }
-        response = requests.get(f'{BASE_URL}records', params=params)
+        headers = {
+            "User-Agent": "DataCurationExploration/0.3 (mailto:sfisher@ucop.edu)"
+        }
+        response = requests.get(f'{BASE_URL}records', params=params, headers=headers)
         if response.status_code != 200:
             return None
         info = response.json()

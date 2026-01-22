@@ -5,7 +5,8 @@ if os.getenv('COLAB_RELEASE_TAG'):
 else:
     IN_COLAB = False
 
-KEYS = ['openai_api_key', 'google_project', 'google_location', 'google_api_key', 'dryad_api_key', 'dryad_secret']
+KEYS = ['openai_api_key', 'google_project', 'google_location', 'google_api_key', 'dryad_api_key', 'dryad_secret',
+        'user_agent']
 
 if not IN_COLAB:
     # Get the directory of the current file
