@@ -46,7 +46,9 @@ def load_file_list(doi):
         return err
 
     if not repo.id_exists():
-        err = f"DOI {doi} not found."
+        # prefer showing the canonical DOI if the repo normalized it
+        canonical = getattr(repo, 'doi', doi)
+        err = f"DOI {canonical} not found."
         return err
 
     file_list = repo.get_filenames_and_links()
