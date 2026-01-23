@@ -1,4 +1,4 @@
-# Data Curation, data quality and readme proof of concept
+# Data Curation: data quality analysis and readme creation proof of concept
 
 ## What is this?
 
@@ -21,7 +21,7 @@ The interface is divided into tabs for different functionalities:
 
 The workflows are very simiilar with small differences:
 
-1. Choose your files locally or give a DOI or dataset landing page URL from either Dryad or Zenodo.
+1. **Choose your files** locally or give a DOI or dataset landing page URL from either Dryad or Zenodo.
   a. If using a URL or DOI, you may need to click the "Lookup DOI" button to obtain a list of files.
   b. After obtaining the list of files you may choose the files to work with by checking them.  For data quality, choose
      a readme (if available) and a tabular file such as tsv, csv or Excel file.  (For readme from multiple files it will
@@ -31,7 +31,7 @@ The workflows are very simiilar with small differences:
 3. The profile management section allows useful prompts to be loaded or saved so the behavior of the AI agent can be
    customized to give different output which might be better or worse (in general) or for some specific domain, data type or use case.
 4. If you choose to use "Frictionless" validation it will run a basic Frictionless Data tabular data validator against the tabular data file.
-5. Choose an LLM model (GPT, Gemini) and click *Submit to LLM* for output and suggestions to appear on the right side.
+5. **Choose an LLM model (GPT, Gemini)** and click **Submit to LLM** for output and suggestions to appear on the right side.
    You may save or print the output after it finishes.
 
 Current issues:
@@ -72,9 +72,9 @@ To use the application, you need access to LLM providers like OpenAI or Google V
 3.  **AWS (Optional)**:
     - If using AWS Bedrock, ensure your AWS credentials are configured in `~/.aws/config` or via environment variables.
 
-4.  **Dryad API key/secret*
-   - Log in to your Dryad account, go to the "My Account" section and there is a button to set up an API account for your
-     use.  Copy the "Account ID" value into `dryad_api_key` and "Secret" value into `dryad_secret`.
+4.  **Dryad API key/secret**:
+    - Log in to your Dryad account, go to the "My Account" section and there is a button to set up an API account for your
+      use.  Copy the "Account ID" value into `dryad_api_key` and "Secret" value into `dryad_secret`.
 
 ### Config values under Google colab
 
