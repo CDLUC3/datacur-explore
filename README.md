@@ -62,7 +62,7 @@ To use the application, you need access to LLM providers like OpenAI or Google V
         google_api_key: "..."
         dryad_api_key: "..."
         dryad_secret: "..."
-        user_agent: "MyApp/1.0 (mailto:myemail@example.com)"
+        user_agent: "DataCurationExploration/0.3 (mailto:myemail@mydomain.com)"
         ```
 
 2.  **Google Vertex AI**:
