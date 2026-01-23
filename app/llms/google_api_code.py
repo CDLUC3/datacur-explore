@@ -15,14 +15,6 @@ def generate(file_context, system_info, prompt, starting_text=''):
 
     parts = [item for item in [prompt, file_context] if item]
 
-    if config.IN_COLAB:
-        try:
-            from google.colab import auth
-            print("Authenticating User in Colab...")
-            auth.authenticate_user()
-        except ImportError:
-            pass
-
     vertexai.init(project=config.get('google_project'), location=config.get('google_location'))
 
     generation_config = {"max_output_tokens": 8192, "temperature": 0.5, "top_p": 0.95}
