@@ -1,140 +1,158 @@
-# Demo setup
+# Data Curation, data quality and readme proof of concept
 
-## Preliminaries
+## What is this?
 
-You need to have accounts for access to the OpenAI API and the Gemini API (VertexAI).
+This is a proof-of-concept application designed to explore data curation tasks using Large Language Models (LLMs).
+It provides a web-based interface for workflows such as:
+- **Improving Data Quality**: Analyzing datasets for quality issues.  It works with common tabular formats such as csv,
+  tsv and Excel files
+- **Readme Generation**: Creating README files from multiple source files or through a multi-stage process.
 
-You'll need to create a project in VertexAI and enable access with Google Cloud IAM in the control panel.
+The project is intended for exploration and experimentation with LLM capabilities in the context of data curation.
 
-Be sure your project is working and then follow steps at
-https://cloud.google.com/docs/authentication/provide-credentials-adc#on-prem for the on-premises setup to get a key
-file with the access information you need.
+## How do I use it?
 
-The key file will go somewhere on the server outside the application directory.
+The application runs as a web server using Gradio. Once running, you can access the interface through your web browser.
 
-For OpenAI, you'll need to create an account and get an API key. Put the key in config.yaml which gets read at startup.
+The interface is divided into tabs for different functionalities:
+1. **Improving data quality**: Tools to check and improve the quality of your data.
+2. **Readme from multiple files**: Generate a README by providing multiple input files.
+3. **Multi stage readme creation**: A workflow to use more than one LLM (one feeding into another for creating a README.
 
-```yaml
-openai_api_key: "sk-proj-yourapikey"              
-```
+The workflows are very simiilar with small differences:
 
-For AWS and Bedrock running locally you'll need to log in to the AWS console to make use of boto3.
-The configuration is stored in `~/.aws/config`.
+1. Choose your files locally or give a DOI or dataset landing page URL from either Dryad or Zenodo.
+  a. If using a URL or DOI, you may need to click the "Lookup DOI" button to obtain a list of files.
+  b. After obtaining the list of files you may choose the files to work with by checking them.  For data quality, choose
+     a readme (if available) and a tabular file such as tsv, csv or Excel file.  (For readme from multiple files it will
+     try to find and retrieve tabular or existing files for you automatically.)
+2. The prompting section has a default setup with system conditioning (basically how the system should act or the role) of the system
+   and a user prompt). The prompts can be refined and saved which is what we're calling a "profile."
+3. The profile management section allows useful prompts to be loaded or saved so the behavior of the AI agent can be
+   customized to give different output which might be better or worse (in general) or for some specific domain, data type or use case.
+4. If you choose to use "Frictionless" validation it will run a basic Frictionless Data tabular data validator against the tabular data file.
+5. Choose an LLM model (GPT, Gemini) and click *Submit to LLM* for output and suggestions to appear on the right side.
+   You may save or print the output after it finishes.
 
-The config file looks something like this:
-
-```ini
-[profile uc3-dev-ops]
-sso_session = uc3
-sso_account_id = 1 # change this to the account id you are using
-sso_role_name = role_name # change this to the role name you are using
-region = us-west-2
-
-[sso-session uc3]
-sso_region = us-west-2
-sso_start_url = https://cdlsso.awsapps.com/start#/
-sso_registration_scopes = sso:account:access
-```
-Run the following commands to log in to the AWS console and allow boto3 access.
-```bash
-export AWS_PROFILE=uc3-dev-ops
-aws sso login --profile uc3-dev-ops
-```
-
-## Server manual install -- python
-
-```bash
-# Install pyenv
-curl https://pyenv.run | bash
-
-# get Ashley to yum install libraries needed to do python installs with pyenv
-sudo yum install gcc glibc glibc-common gd gd-devel -y
-sudo yum install -y openssl-devel bzip2-devel zlib-devel readline-devel sqlite-devel libffi-devel xz-devel gdbm-devel ncurses-devel libuuid-devel
-
-# Install python 3.10.13
-pyenv install 3.10.13
-```
-
-## Application "install"
-
-```bash
-# Clone the repo
-git clone https://github.com/CDLUC3/datacur-explore.git
-
-# to update to the latest version of the main branch
-cd datacur-explore
-git pull
-
-# Add the file 'config.yaml' inside the gradio_gpt_gemini directory with contents as explained above.
-# Add the key file for VertexAI outside the application directory and track where it is since you'll need to set an
-# environment variable to point to it.
-```
-
-## Running the application
-
-```bash
-# we have a control start/stop script (example included in repo) called gradio_control.sh
-# use start|stop|status|restart as arguments
-./gradio_control.sh start
-```
-
-## Updating the application
-```bash
-cd ~/datacur-explore
-git pull
-```
+Current issues:
+- The Llama model relies on AWS Bedrock configuration running within an AWS account (and running on an ECS instance) to work.
+- Readme from multiple files will likely produce better output by saving tabular files locally as well as a copy/paste into a text
+  file with the contents of the current landing page metadata.  (Just copy and paste the main content from the landing page
+  metadata as text and don't worry about formatting). Include a readme if there already is one.
+- Multi-stage readme creation sometimes overflows the allowed context size or token per minute limits of a LLM provider, especially
+  if the output of the first LLM in the chain is large.  Also if your account has smaller limits than some more expensive
+  or *professional* account types it may hit limits (and you may not be allowed to use newer models, either).
 
 
-# Previous description for the main README
-# Data curation exploration code
+## Required configuration of other services
 
-The repo is for sharing small exploratory projects and shouldn't be considered robust
-production code.
+To use the application, you need access to LLM providers like OpenAI or Google Vertex AI (Gemini).
 
-## Starting/stopping the gradio interfaces
+**After cloning the repo or copying the colab (see "How do I run it?" below)**
 
-ssh to the server under the role account (or sudo su - \<user\>) after logging in as yourself.
+### Config values for running locally on a server
 
-Once you're in the server you can use the following script to start and stop the gradio interfaces.
-The script in the home directory of the role account. (~)
+1.  **Configuration File**:
+    - Copy `app/config_example.yaml` to `app/config.yaml`.
+    - Fill in the required API keys and settings:
+        ```yaml
+        openai_api_key: "sk-..."
+        google_project: "your-project-id"
+        google_location: "us-central1"
+        google_api_key: "..."
+        dryad_api_key: "..."
+        dryad_secret: "..."
+        user_agent: "MyApp/1.0 (mailto:myemail@example.com)"
+        ```
 
-```bash
-~/gradio-control.sh
-```
+2.  **Google Vertex AI**:
+    - Ensure you have a Google Cloud project with Vertex AI enabled.
+    - Set up authentication (e.g., `GOOGLE_APPLICATION_CREDENTIALS` environment variable pointing to your service account key file).
 
-## Actions for the script
+3.  **AWS (Optional)**:
+    - If using AWS Bedrock, ensure your AWS credentials are configured in `~/.aws/config` or via environment variables.
 
-- *start* will start the server on the port.
-- *stop* will stop the server on the port.
-- *status* will show the status of the server on the port.
-- *restart* will stop and start the server on the port.
+4.  **Dryad API key/secret*
+   - Log in to your Dryad account, go to the "My Account" section and there is a button to set up an API account for your
+     use.  Copy the "Account ID" value into `dryad_api_key` and "Secret" value into `dryad_secret`.
 
-## Updating the libraries
+### Config values under Google colab
 
-The lightest weight way to handle locked dependencies right now is with `pip-tools`
-which uses `requirements.in` as a list of dependencies and then writes `requirements.txt` 
-as the locked version of libraries.  To install pip tools: `pip install pip-tools`.
+   - Set up the external services listed above under "running locally" and get the values for these items.
+   - Go to https://colab.research.google.com/drive/1rcb9HgYxScVzRWhwVpqgavgv28YQbTEs?usp=sharing and then click
+     *File* > *Save a copy in Drive*.
+   - You should then fill in the configuration for the colab notebook using the key icon on the left side of the notebook.
+   - Fill in the exact names shown above with your own values.
 
-We probably need more than just pip alone since for dependabot to function fully, it
-needs to see the full set of dependencies and versions someplace and pip-tools will
-do this without a lot of extra overhead.  In the future we may go towards a more
-robust solution.
 
-To create the locked version of the libraries:
 
-```
-pip-compile requirements.in  # creates requirements.txt
-```
+## How do I install it on a local machine or server?
 
-And to upgrade
+### Prerequisites
+- Python 3.12 or higher.
+- `pip` or `pip-tools`.
 
-```
-pip-compile requirements.in --upgrade  # updates requirements.txt
-```
+You should install Python.  You can have multiple versions of Python installed on Linux-like systems by using *pyenv*.  You
+may have a system version of python already installed (often called "python3") which may also work.
 
-To install the dependencies:
+### Installation Steps
 
-```
-pip-sync requirements.txt
-```
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/CDLUC3/datacur-explore.git
+    cd datacur-explore
+    ```
 
+2.  **Install dependencies**:
+    It is recommended to use a virtual environment. (create with `python -m venv venv` and activate with `source venv/bin/activate`)
+    ```bash
+    pip install -r requirements.txt
+    ```
+    Or if you are using `pip-tools`:
+    ```bash
+    pip-sync requirements.txt
+    ```
+
+3.  **Run the application**:
+    You can run the application directly with Python:
+    ```bash
+    python main.py
+    ```
+    
+    Or use the provided control script (Linux/macOS which may need small modifications in your environment):
+    ```bash
+    ./gradio_control.sh start
+    ```
+
+    By default, the app runs on `http://127.0.0.1:7860`. You can change the host and port using command-line arguments (see `python main.py --help`).
+
+## How do I use it in colab?
+
+Open the colab https://colab.research.google.com/drive/1rcb9HgYxScVzRWhwVpqgavgv28YQbTEs?usp=sharing
+
+1. Create your own copy of the colab sheet for use and modification by clicking *File* > *Save a copy in Drive*
+2. In your own copy click the key icon on the left side to fill in the key/value pairs for configuration and secrets (see above)
+3. Play each code section of the worksheet (It should show a check mark after playing if successful).
+4. After the last section you should see a public sharing URL shown in the output and you can use that to open the web application.
+
+## What is Gradio and how is the code structured?
+
+**Gradio** is an open-source Python library used to build machine learning demos and web applications quickly. It allows developers to create user interfaces for their models with just a few lines of code.
+
+**Code Structure**:
+
+The useful parts of the application live under the `app` directory.
+
+- **`main.py`**: The entry point of the application. It parses command-line arguments and launches the Gradio app.
+- **`app/common/`**: common utility functions used in many places.
+- **`app/interface/`**: Contains the UI logic.
+    - `app.py`: Defines the main application layout and tabs.
+    - `pages/`: Contains the specific logic for each tab (e.g., `data_quality.py`, `readme_multi_file.py`).
+    - `page_handlers/`: Contain event handlers for the UI
+- **`app/config.py`**: Handles configuration loading from `config.yaml` or environment variables.
+- **`app/llms/`**: Logic for interacting with different LLM providers.
+- **`app/prompt_profiles/`**: contains some default profiles and additional profiles may be saved there.
+- **`app/repositories/`**: contains code for interacting with the Dryad and Zenodo repositories.
+- **`requirements.in` / `requirements.txt`**: Python dependency definitions.
+
+Also see the [old README](./README-old.md) for older information that may still be useful.
