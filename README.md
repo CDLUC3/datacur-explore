@@ -1,3 +1,5 @@
+Note:  This is now an archived repo that isn't being updated and maintained, though some of the code may be useful in some way for the future.
+
 # Data Curation: data quality analysis and readme creation proof of concept
 
 ## What is this?
